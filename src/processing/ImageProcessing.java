@@ -1,10 +1,13 @@
 package processing;
 
-import processing.model.PixelColor;
 import utils.ColorMathUtils;
 import utils.ImageUtils;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.ToIntFunction;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static utils.ImageUtils.STD_HEIGHT;
@@ -13,12 +16,35 @@ import static utils.ImageUtils.STD_WIDTH;
 public class ImageProcessing
 {
 
-    public static List<PixelColor> computeBestPalette(PixelColor[][] originalImage, List<PixelColor> nesPalette)
+    public static List<PixelColor> computeBestPalette(PixelColor[][] originalImage, List<PixelColor> palette)
     {
-        return nesPalette;
+        Map<PixelColor, Integer> histogram = palette.stream()
+                                                    .collect(Collectors.toMap(color -> color, color -> 0, (a, b) -> b));
+
+
+        for (PixelColor[] pixelColors : originalImage)
+            for (PixelColor pixelColor : pixelColors)
+            {
+                PixelColor bestMatch = ColorMathUtils.bestMatch(pixelColor, palette);
+                histogram.put(bestMatch, histogram.get(bestMatch) + 1);
+            }
+        List<PixelColor> bestPalette = histogram.entrySet()
+                                                .stream()
+                                                .sorted(Comparator.comparingInt((ToIntFunction<Map.Entry<PixelColor, Integer>>) Map.Entry::getValue)
+                                                                  .reversed())
+                                                .limit(13)
+                                                .map(Map.Entry::getKey)
+                                                .collect(Collectors.toList());
+
+        if (!bestPalette.contains(PixelColor.BLACK))
+        {
+            bestPalette.remove(bestPalette.size() - 1);
+            bestPalette.add(PixelColor.BLACK);
+        }
+        return bestPalette;
     }
 
-    public static void redraw(PixelColor[][] originalImage, List<PixelColor> palette, String filename, boolean dither)
+    public static PixelColor[][] redraw(PixelColor[][] originalImage, List<PixelColor> palette, String filename, boolean dither)
     {
         PixelColor[][] image = new PixelColor[STD_WIDTH][STD_HEIGHT];
 
@@ -40,31 +66,12 @@ public class ImageProcessing
 
                     image[x][y] = newPixel;
 
-                    PixelColor quantizationError = PixelColor.difference(oldPixel, newPixel);
-
-                    try
-                    {
-                        image[x + 1][y] = addQuantizationError(image[x + 1][y], quantizationError, 7 / 16.0);
-                        image[x - 1][y + 1] = addQuantizationError(image[x - 1][y + 1], quantizationError, 3 / 16.0);
-                        image[x][y + 1] = addQuantizationError(image[x][y + 1], quantizationError, 4 / 16.0);
-                        image[x + 1][y + 1] = addQuantizationError(image[x + 1][y + 1], quantizationError, 1 / 16.0);
-                    }
-                    catch (ArrayIndexOutOfBoundsException ignored)
-                    {
-                    }
+                    ColorMathUtils.dither(image, x, y, oldPixel, newPixel);
                 }
         }
         ImageUtils.saveFile(image, filename + (dither ? "_dithered" : "_raw"));
+
+        return image;
     }
 
-    private static PixelColor addQuantizationError(PixelColor pixelColor,
-                                                   PixelColor quantizationError,
-                                                   double factor)
-    {
-        return new PixelColor(pixelColor.getRed() + (int) Math.round(quantizationError.getRed() * factor),
-                              pixelColor.getGreen() + (int) Math.round(quantizationError.getGreen() * factor),
-                              pixelColor.getBlue() + (int) Math.round(quantizationError.getBlue() * factor));
-
-
-    }
 }

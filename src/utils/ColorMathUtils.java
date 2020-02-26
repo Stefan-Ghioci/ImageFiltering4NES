@@ -1,6 +1,6 @@
 package utils;
 
-import processing.model.PixelColor;
+import processing.PixelColor;
 
 import java.util.List;
 
@@ -23,7 +23,7 @@ public class ColorMathUtils
         return min_diff_color;
     }
 
-    private static double computeColorDiffSquared(PixelColor color1, PixelColor color2)
+    public static double computeColorDiffSquared(PixelColor color1, PixelColor color2)
     {
         int r1 = color1.getRed();
         int g1 = color1.getGreen();
@@ -36,5 +36,32 @@ public class ColorMathUtils
         return ((r1 - r2) * 3) * ((r1 - r2) * 3) +
                ((g1 - g2) * 4) * ((g1 - g2) * 4) +
                ((b1 - b2) * 2) * ((b1 - b2) * 2);
+    }
+
+    public static void dither(PixelColor[][] image, int x, int y, PixelColor oldPixel, PixelColor newPixel)
+    {
+        PixelColor quantizationError = PixelColor.difference(oldPixel, newPixel);
+
+        try
+        {
+            image[x + 1][y] = addQuantizationError(image[x + 1][y], quantizationError, 7 / 16.0);
+            image[x - 1][y + 1] = addQuantizationError(image[x - 1][y + 1], quantizationError, 3 / 16.0);
+            image[x][y + 1] = addQuantizationError(image[x][y + 1], quantizationError, 4 / 16.0);
+            image[x + 1][y + 1] = addQuantizationError(image[x + 1][y + 1], quantizationError, 1 / 16.0);
+        }
+        catch (ArrayIndexOutOfBoundsException ignored)
+        {
+        }
+    }
+
+    private static PixelColor addQuantizationError(PixelColor pixelColor,
+                                                   PixelColor quantizationError,
+                                                   double factor)
+    {
+        return new PixelColor(pixelColor.getRed() + (int) Math.round(quantizationError.getRed() * factor),
+                              pixelColor.getGreen() + (int) Math.round(quantizationError.getGreen() * factor),
+                              pixelColor.getBlue() + (int) Math.round(quantizationError.getBlue() * factor));
+
+
     }
 }

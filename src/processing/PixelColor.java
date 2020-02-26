@@ -1,9 +1,10 @@
-package processing.model;
+package processing;
 
 import java.util.Objects;
 
 public class PixelColor
 {
+    public static final PixelColor BLACK = new PixelColor(0,0,0);
     private final int red;
     private final int blue;
     private final int green;

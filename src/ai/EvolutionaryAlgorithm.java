@@ -12,7 +12,7 @@ public abstract class EvolutionaryAlgorithm
 {
     final static Logger LOGGER = LoggerFactory.getLogger(EvolutionaryAlgorithm.class);
 
-    public Individual run(int populationSize, int stagnationFactor, double mutationChance)
+    public Object run(int populationSize, int stagnationFactor, double mutationChance)
     {
         LOGGER.info("Running evolutionary algorithm with {} individuals with {} stagnation factor",
                     populationSize,
@@ -23,8 +23,9 @@ public abstract class EvolutionaryAlgorithm
 
         Individual lastBest = null;
         int iterationCounter = 1;
+        int stagnationTime = 0;
 
-        while (stagnationFactor > 0)
+        while (stagnationTime < stagnationFactor)
         {
             population.forEach(Individual::evaluate);
 
@@ -50,30 +51,40 @@ public abstract class EvolutionaryAlgorithm
 
             Individual newBest = best(population);
 
-            double improvement = calculateImprovement(lastBest, newBest);
-
-            if (improvement != 0)
+            if (iterationCounter != 1)
             {
-                lastBest = newBest;
-                LOGGER.info("Iteration {}, best fitness {} with {}% improvement",
-                            iterationCounter,
-                            lastBest.getFitness(),
-                            improvement);
+                double improvement = calculateImprovement(lastBest, newBest);
+
+                if (improvement != 0)
+                {
+                    lastBest = newBest;
+                    stagnationTime = 0;
+                    LOGGER.info("Iteration {}, best fitness {} with {}% improvement",
+                                iterationCounter,
+                                lastBest.getFitness(),
+                                improvement);
+                }
+                else
+                {
+                    stagnationTime++;
+//                    LOGGER.info("Iteration {}, stagnation", iterationCounter);
+                }
             }
             else
             {
-                stagnationFactor--;
-                LOGGER.info("Iteration {}, stagnation", iterationCounter);
+                lastBest = newBest;
+                LOGGER.info("Iteration 1, initial best fitness {}", lastBest.getFitness());
             }
             iterationCounter++;
         }
 
-        return lastBest;
+        return lastBest != null ? lastBest.getSolution() : null;
     }
 
     private double calculateImprovement(Individual lastBest, Individual newBest)
     {
-        return Math.round((newBest.getFitness() - lastBest.getFitness()) / lastBest.getFitness() * 10000) / 100.0;
+        return (int) (Math.round((lastBest.getFitness() - newBest.getFitness()) / lastBest.getFitness() * 10000))
+               / 100.0;
     }
 
 

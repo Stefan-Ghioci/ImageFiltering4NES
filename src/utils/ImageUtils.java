@@ -1,6 +1,6 @@
 package utils;
 
-import processing.model.PixelColor;
+import processing.PixelColor;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -16,6 +16,7 @@ public class ImageUtils
 
     public final static int STD_HEIGHT = 240;
     public final static int STD_WIDTH = 256;
+    public final static int BLOCK_SIZE = 16;
 
     public static List<PixelColor> loadNESPalette()
     {

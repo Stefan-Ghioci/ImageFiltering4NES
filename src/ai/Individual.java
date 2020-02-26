@@ -1,21 +1,12 @@
 package ai;
 
-public abstract class Individual
+public interface Individual
 {
+    double getFitness();
 
-    private double fitness;
+    void evaluate();
 
-    protected Individual(double fitness)
-    {
-        this.fitness = fitness;
-    }
+    void mutate();
 
-    double getFitness()
-    {
-        return fitness;
-    }
-
-    abstract protected void evaluate();
-
-    abstract protected void mutate();
+    Object getSolution();
 }

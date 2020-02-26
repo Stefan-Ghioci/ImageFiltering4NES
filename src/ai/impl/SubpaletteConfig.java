@@ -1,25 +1,85 @@
 package ai.impl;
 
 import ai.Individual;
+import processing.PixelColor;
+import utils.ColorMathUtils;
 
-public class SubpaletteConfig extends Individual
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static utils.ImageUtils.*;
+
+public class SubpaletteConfig implements Individual
 {
-    protected SubpaletteConfig(double fitness)
+    private PixelColor[][] image;
+    private List<List<PixelColor>> subpaletteList;
+    double fitness;
+
+    public SubpaletteConfig(List<List<PixelColor>> subpaletteList, PixelColor[][] image)
     {
-        super(fitness);
+        this.subpaletteList = subpaletteList;
+        this.image = image;
+        fitness = 0;
+    }
+
+
+    @Override
+    public double getFitness()
+    {
+        return fitness;
     }
 
     @Override
-    protected void evaluate()
+    public void evaluate()
     {
+        for (int x = 0; x < STD_WIDTH; x += BLOCK_SIZE)
+            for (int y = 0; y < STD_HEIGHT; y += BLOCK_SIZE)
+            {
+                double minDiffSum = -1;
 
+                for (List<PixelColor> subpalette : subpaletteList)
+                {
+                    double diffSum = 0;
+
+                    for (int i = 0; i < BLOCK_SIZE - 1; i++)
+                        for (int j = 0; j < BLOCK_SIZE - 1; j++)
+                        {
+                            PixelColor color = image[x + i][y + j];
+                            PixelColor bestMatch = ColorMathUtils.bestMatch(color, subpalette);
+                            diffSum += ColorMathUtils.computeColorDiffSquared(color, bestMatch);
+                        }
+                    if (minDiffSum == -1 || minDiffSum > diffSum)
+                        minDiffSum = diffSum;
+                }
+
+                fitness += (minDiffSum / (BLOCK_SIZE * BLOCK_SIZE));
+            }
+        int blocks = (STD_HEIGHT * STD_WIDTH) / (BLOCK_SIZE * BLOCK_SIZE);
+        fitness = fitness / blocks;
+    }
+
+
+    @Override
+    public void mutate()
+    {
+        // generate subpalette with one color from each of the other subpalettes
+
+        List<PixelColor> subpalette = subpaletteList.stream()
+                                                    .map(element -> element.get((int) (Math.random() * 4)))
+                                                    .collect(Collectors.toList());
+        if (!subpalette.contains(PixelColor.BLACK))
+        {
+            subpalette.remove(subpalette.size() - 1);
+            subpalette.add(PixelColor.BLACK);
+        }
+
+        subpaletteList.remove((int) (Math.random() * 4));
+        subpaletteList.add(subpalette);
     }
 
     @Override
-    protected void mutate()
+    public List<List<PixelColor>> getSolution()
     {
-
+        return subpaletteList;
     }
-
-
 }

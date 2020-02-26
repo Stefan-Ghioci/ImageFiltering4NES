@@ -1,5 +1,7 @@
+import ai.EvolutionaryAlgorithm;
+import ai.impl.SubpaletteAlgorithm;
 import processing.ImageProcessing;
-import processing.model.PixelColor;
+import processing.PixelColor;
 import utils.ImageUtils;
 
 import java.util.List;
@@ -15,8 +17,16 @@ public class Start
         List<PixelColor> nesPalette = ImageUtils.loadNESPalette();
         List<PixelColor> bestPalette = ImageProcessing.computeBestPalette(originalImage, nesPalette);
 
-        ImageProcessing.redraw(originalImage, nesPalette, filename + "_nes", false);
-        ImageProcessing.redraw(originalImage, nesPalette, filename + "_nes", true);
+        PixelColor[][] nesRawImage = ImageProcessing.redraw(originalImage, nesPalette, filename + "_nes", false);
+        PixelColor[][] nesDitheredImage = ImageProcessing.redraw(originalImage, nesPalette, filename + "_nes", true);
+
+
+        PixelColor[][] bestRawImage = ImageProcessing.redraw(originalImage, bestPalette, filename + "_best", false);
+        PixelColor[][] bestDitheredImage = ImageProcessing.redraw(originalImage, bestPalette, filename + "_best", true);
+
+
+        SubpaletteAlgorithm algorithm = new SubpaletteAlgorithm(bestDitheredImage, bestPalette);
+        List<List<PixelColor>> subpalettes = algorithm.run(20, 50, 0.1);
 
     }
 }
