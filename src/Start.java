@@ -13,10 +13,10 @@ public class Start
         PixelColor[][] originalImage = ImageUtils.loadFile(filename);
 
         List<PixelColor> nesPalette = ImageUtils.loadNESPalette();
-        List<PixelColor> bestPalette = ImageProcessing.computeBestPalette(nesPalette);
+        List<PixelColor> bestPalette = ImageProcessing.computeBestPalette(originalImage, nesPalette);
 
         ImageProcessing.redraw(originalImage, nesPalette, filename + "_nes", false);
-        ImageProcessing.redraw(originalImage, nesPalette, filename + "_nes_dithered", true);
+        ImageProcessing.redraw(originalImage, nesPalette, filename + "_nes", true);
 
     }
 }

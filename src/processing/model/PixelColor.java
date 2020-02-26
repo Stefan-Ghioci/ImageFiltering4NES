@@ -23,6 +23,13 @@ public class PixelColor
         this.blue = rgb & 0xff;
     }
 
+    public static PixelColor difference(PixelColor oldPixel, PixelColor newPixel)
+    {
+        return new PixelColor(oldPixel.red - newPixel.red,
+                              oldPixel.green - newPixel.green,
+                              oldPixel.blue - newPixel.blue);
+    }
+
     @Override
     public boolean equals(Object o)
     {
