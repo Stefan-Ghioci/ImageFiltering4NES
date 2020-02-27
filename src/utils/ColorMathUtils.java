@@ -4,6 +4,8 @@ import processing.PixelColor;
 
 import java.util.List;
 
+import static utils.ImageUtils.BLOCK_SIZE;
+
 public class ColorMathUtils
 {
     public static PixelColor bestMatch(PixelColor color, List<PixelColor> palette)
@@ -63,5 +65,57 @@ public class ColorMathUtils
                               pixelColor.getBlue() + (int) Math.round(quantizationError.getBlue() * factor));
 
 
+    }
+
+    public static double getMinDiffSumPerBlock(int x,
+                                               int y,
+                                               List<List<PixelColor>> subpaletteList,
+                                               PixelColor[][] image)
+    {
+        double minDiffSum = -1;
+
+        for (List<PixelColor> subpalette : subpaletteList)
+        {
+            double diffSum = 0;
+
+            for (int i = 0; i < BLOCK_SIZE; i++)
+                for (int j = 0; j < BLOCK_SIZE; j++)
+                {
+                    PixelColor color = image[x + i][y + j];
+                    PixelColor bestMatch = bestMatch(color, subpalette);
+                    diffSum += computeColorDiffSquared(color, bestMatch);
+                }
+            if (minDiffSum == -1 || minDiffSum > diffSum)
+                minDiffSum = diffSum;
+        }
+        return minDiffSum;
+    }
+
+    public static List<PixelColor> getBestSubpalettePerBlock(int x,
+                                                             int y,
+                                                             List<List<PixelColor>> subpaletteList,
+                                                             PixelColor[][] image)
+    {
+        double minDiffSum = -1;
+        List<PixelColor> minSubpalette = subpaletteList.get(0);
+
+        for (List<PixelColor> subpalette : subpaletteList)
+        {
+            double diffSum = 0;
+
+            for (int i = 0; i < BLOCK_SIZE; i++)
+                for (int j = 0; j < BLOCK_SIZE; j++)
+                {
+                    PixelColor color = image[x + i][y + j];
+                    PixelColor bestMatch = bestMatch(color, subpalette);
+                    diffSum += computeColorDiffSquared(color, bestMatch);
+                }
+            if (minDiffSum == -1 || minDiffSum > diffSum)
+            {
+                minDiffSum = diffSum;
+                minSubpalette = subpalette;
+            }
+        }
+        return minSubpalette;
     }
 }

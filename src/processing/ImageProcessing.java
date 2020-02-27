@@ -10,8 +10,7 @@ import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static utils.ImageUtils.STD_HEIGHT;
-import static utils.ImageUtils.STD_WIDTH;
+import static utils.ImageUtils.*;
 
 public class ImageProcessing
 {
@@ -36,15 +35,18 @@ public class ImageProcessing
                                                 .map(Map.Entry::getKey)
                                                 .collect(Collectors.toList());
 
-        if (!bestPalette.contains(PixelColor.BLACK))
+        if (!bestPalette.contains(PixelColor.BLACK()))
         {
             bestPalette.remove(bestPalette.size() - 1);
-            bestPalette.add(PixelColor.BLACK);
+            bestPalette.add(PixelColor.BLACK());
         }
         return bestPalette;
     }
 
-    public static PixelColor[][] redraw(PixelColor[][] originalImage, List<PixelColor> palette, String filename, boolean dither)
+    public static PixelColor[][] redraw(PixelColor[][] originalImage,
+                                        List<PixelColor> palette,
+                                        String filename,
+                                        boolean dither)
     {
         PixelColor[][] image = new PixelColor[STD_WIDTH][STD_HEIGHT];
 
@@ -74,4 +76,22 @@ public class ImageProcessing
         return image;
     }
 
+    public static void reconstruct(PixelColor[][] originalImage, List<List<PixelColor>> subpaletteList, String filename)
+    {
+        PixelColor[][] image = new PixelColor[STD_WIDTH][STD_HEIGHT];
+
+        for (int x = 0; x < STD_WIDTH; x += BLOCK_SIZE)
+            for (int y = 0; y < STD_HEIGHT; y += BLOCK_SIZE)
+            {
+                List<PixelColor>
+                        subpalette =
+                        ColorMathUtils.getBestSubpalettePerBlock(x, y, subpaletteList, originalImage);
+
+                for (int i = 0; i < BLOCK_SIZE; i++)
+                    for (int j = 0; j < BLOCK_SIZE; j++)
+                        image[x + i][y + j] = ColorMathUtils.bestMatch(originalImage[x + i][y + j], subpalette);
+            }
+
+        ImageUtils.saveFile(image, filename);
+    }
 }

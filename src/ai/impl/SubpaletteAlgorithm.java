@@ -20,11 +20,10 @@ public class SubpaletteAlgorithm extends EvolutionaryAlgorithm
         this.palette = palette;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public List<List<PixelColor>> run(int populationSize, int stagnationFactor, double mutationChance)
+    public SubpaletteConfig run(int populationSize, int stagnationFactor, double mutationChance)
     {
-        return (List<List<PixelColor>>) super.run(populationSize, stagnationFactor, mutationChance);
+        return (SubpaletteConfig) super.run(populationSize, stagnationFactor, mutationChance);
     }
 
     @Override
@@ -35,7 +34,7 @@ public class SubpaletteAlgorithm extends EvolutionaryAlgorithm
         for (int i = 0; i < 4; i++)
         {
             List<PixelColor> subpalette = new ArrayList<>();
-            subpalette.add(PixelColor.BLACK);
+            subpalette.add(PixelColor.BLACK());
 
             while (subpalette.size() < 4)
             {

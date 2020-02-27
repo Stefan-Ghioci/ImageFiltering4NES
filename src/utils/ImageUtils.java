@@ -68,6 +68,7 @@ public class ImageUtils
         for (int x = 0; x < STD_WIDTH; x++)
             for (int y = 0; y < STD_HEIGHT; y++)
             {
+                if(image[x][y] == null) System.out.println("x=" + x + ",y=" + y);
                 bufferedImage.setRGB(x, y, image[x][y].toInt());
             }
 

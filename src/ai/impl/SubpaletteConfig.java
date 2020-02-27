@@ -35,22 +35,7 @@ public class SubpaletteConfig implements Individual
         for (int x = 0; x < STD_WIDTH; x += BLOCK_SIZE)
             for (int y = 0; y < STD_HEIGHT; y += BLOCK_SIZE)
             {
-                double minDiffSum = -1;
-
-                for (List<PixelColor> subpalette : subpaletteList)
-                {
-                    double diffSum = 0;
-
-                    for (int i = 0; i < BLOCK_SIZE - 1; i++)
-                        for (int j = 0; j < BLOCK_SIZE - 1; j++)
-                        {
-                            PixelColor color = image[x + i][y + j];
-                            PixelColor bestMatch = ColorMathUtils.bestMatch(color, subpalette);
-                            diffSum += ColorMathUtils.computeColorDiffSquared(color, bestMatch);
-                        }
-                    if (minDiffSum == -1 || minDiffSum > diffSum)
-                        minDiffSum = diffSum;
-                }
+                double minDiffSum = ColorMathUtils.getMinDiffSumPerBlock(x, y, subpaletteList, image);
 
                 fitness += (minDiffSum / (BLOCK_SIZE * BLOCK_SIZE));
             }
@@ -67,10 +52,10 @@ public class SubpaletteConfig implements Individual
         List<PixelColor> subpalette = subpaletteList.stream()
                                                     .map(element -> element.get((int) (Math.random() * 4)))
                                                     .collect(Collectors.toList());
-        if (!subpalette.contains(PixelColor.BLACK))
+        if (!subpalette.contains(PixelColor.BLACK()))
         {
             subpalette.remove(subpalette.size() - 1);
-            subpalette.add(PixelColor.BLACK);
+            subpalette.add(PixelColor.BLACK());
         }
 
         subpaletteList.remove((int) (Math.random() * 4));

@@ -4,11 +4,10 @@ import java.util.Objects;
 
 public class PixelColor
 {
-    public static final PixelColor BLACK = new PixelColor(0,0,0);
     private final int red;
+
     private final int blue;
     private final int green;
-
     public PixelColor(int red, int green, int blue)
     {
         this.red = red;
@@ -22,6 +21,11 @@ public class PixelColor
         this.red = (rgb & 0xff0000) >> 16;
         this.green = (rgb & 0xff00) >> 8;
         this.blue = rgb & 0xff;
+    }
+
+    public static PixelColor BLACK()
+    {
+        return new PixelColor(0, 0, 0);
     }
 
     public static PixelColor difference(PixelColor oldPixel, PixelColor newPixel)

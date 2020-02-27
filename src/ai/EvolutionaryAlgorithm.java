@@ -12,7 +12,7 @@ public abstract class EvolutionaryAlgorithm
 {
     final static Logger LOGGER = LoggerFactory.getLogger(EvolutionaryAlgorithm.class);
 
-    public Object run(int populationSize, int stagnationFactor, double mutationChance)
+    public Individual run(int populationSize, int stagnationFactor, double mutationChance)
     {
         LOGGER.info("Running evolutionary algorithm with {} individuals with {} stagnation factor",
                     populationSize,
@@ -25,9 +25,10 @@ public abstract class EvolutionaryAlgorithm
         int iterationCounter = 1;
         int stagnationTime = 0;
 
+        population.forEach(Individual::evaluate);
+
         while (stagnationTime < stagnationFactor)
         {
-            population.forEach(Individual::evaluate);
 
             lastBest = best(population);
             Individual mother = select(population);
@@ -61,7 +62,7 @@ public abstract class EvolutionaryAlgorithm
                     stagnationTime = 0;
                     LOGGER.info("Iteration {}, best fitness {} with {}% improvement",
                                 iterationCounter,
-                                lastBest.getFitness(),
+                                (int) newBest.getFitness(),
                                 improvement);
                 }
                 else
@@ -73,12 +74,14 @@ public abstract class EvolutionaryAlgorithm
             else
             {
                 lastBest = newBest;
-                LOGGER.info("Iteration 1, initial best fitness {}", lastBest.getFitness());
+                LOGGER.info("Iteration 1, initial best fitness {}", (int) newBest.getFitness());
             }
             iterationCounter++;
         }
 
-        return lastBest != null ? lastBest.getSolution() : null;
+        //noinspection ConstantConditions
+        LOGGER.info("Algorithm ran for {} iterations, last best fitness {}", iterationCounter, (int)lastBest.getFitness());
+        return lastBest;
     }
 
     private double calculateImprovement(Individual lastBest, Individual newBest)
