@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/Compression/Compression.iml" filepath="$PROJECT_DIR$/Compression/Compression.iml" />
       <module fileurl="file://$PROJECT_DIR$/ImageFiltering4NES.iml" filepath="$PROJECT_DIR$/ImageFiltering4NES.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Reconstruction/Reconstruction.iml" filepath="$PROJECT_DIR$/Reconstruction/Reconstruction.iml" />
     </modules>
   </component>
 </project>
