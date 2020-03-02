@@ -52,11 +52,12 @@ public class SubpaletteConfig implements Individual
         List<PixelColor> subpalette = subpaletteList.stream()
                                                     .map(element -> element.get((int) (Math.random() * 4)))
                                                     .collect(Collectors.toList());
+
         if (!subpalette.contains(PixelColor.BLACK()))
-        {
             subpalette.remove(subpalette.size() - 1);
-            subpalette.add(PixelColor.BLACK());
-        }
+        else
+            subpalette.remove(PixelColor.BLACK());
+        subpalette.add(0, PixelColor.BLACK());
 
         subpaletteList.remove((int) (Math.random() * 4));
         subpaletteList.add(subpalette);

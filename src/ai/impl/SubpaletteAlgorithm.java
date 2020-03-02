@@ -34,7 +34,7 @@ public class SubpaletteAlgorithm extends EvolutionaryAlgorithm
         for (int i = 0; i < 4; i++)
         {
             List<PixelColor> subpalette = new ArrayList<>();
-            subpalette.add(PixelColor.BLACK());
+            subpalette.add(0, PixelColor.BLACK());
 
             while (subpalette.size() < 4)
             {

@@ -1,8 +1,8 @@
 package processing;
 
 import utils.ColorMathUtils;
-import utils.ImageUtils;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +10,8 @@ import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static utils.ColorMathUtils.bestMatch;
+import static utils.ColorMathUtils.getBestSubpalettePerBlock;
 import static utils.ImageUtils.*;
 
 public class ImageProcessing
@@ -24,7 +26,7 @@ public class ImageProcessing
         for (PixelColor[] pixelColors : originalImage)
             for (PixelColor pixelColor : pixelColors)
             {
-                PixelColor bestMatch = ColorMathUtils.bestMatch(pixelColor, palette);
+                PixelColor bestMatch = bestMatch(pixelColor, palette);
                 histogram.put(bestMatch, histogram.get(bestMatch) + 1);
             }
         List<PixelColor> bestPalette = histogram.entrySet()
@@ -53,7 +55,7 @@ public class ImageProcessing
         if (!dither)
             for (int x = 0; x < STD_WIDTH; x++)
                 for (int y = 0; y < STD_HEIGHT; y++)
-                    image[x][y] = ColorMathUtils.bestMatch(originalImage[x][y], palette);
+                    image[x][y] = bestMatch(originalImage[x][y], palette);
         else
         {
             // array copy originalImage into image
@@ -64,34 +66,42 @@ public class ImageProcessing
                 for (int x = 0; x < STD_WIDTH; x++)
                 {
                     PixelColor oldPixel = image[x][y];
-                    PixelColor newPixel = ColorMathUtils.bestMatch(oldPixel, palette);
+                    PixelColor newPixel = bestMatch(oldPixel, palette);
 
                     image[x][y] = newPixel;
 
                     ColorMathUtils.dither(image, x, y, oldPixel, newPixel);
                 }
         }
-        ImageUtils.saveFile(image, filename + (dither ? "_dithered" : "_raw"));
+        saveFile(image, filename + (dither ? "_dithered" : "_raw"));
 
         return image;
     }
 
     public static void reconstruct(PixelColor[][] originalImage, List<List<PixelColor>> subpaletteList, String filename)
     {
+
         PixelColor[][] image = new PixelColor[STD_WIDTH][STD_HEIGHT];
+        List<Integer> subpaletteMapping = new ArrayList<>();
 
         for (int x = 0; x < STD_WIDTH; x += BLOCK_SIZE)
+        {
             for (int y = 0; y < STD_HEIGHT; y += BLOCK_SIZE)
             {
-                List<PixelColor>
-                        subpalette =
-                        ColorMathUtils.getBestSubpalettePerBlock(x, y, subpaletteList, originalImage);
+                List<PixelColor> subpalette = getBestSubpalettePerBlock(x, y, subpaletteList, originalImage);
+
+                subpaletteMapping.add(subpaletteList.indexOf(subpalette));
 
                 for (int i = 0; i < BLOCK_SIZE; i++)
                     for (int j = 0; j < BLOCK_SIZE; j++)
-                        image[x + i][y + j] = ColorMathUtils.bestMatch(originalImage[x + i][y + j], subpalette);
+                    {
+                        PixelColor bestMatch = bestMatch(originalImage[x + i][y + j], subpalette);
+                        image[x + i][y + j] = bestMatch;
+                    }
             }
-
-        ImageUtils.saveFile(image, filename);
+        }
+        saveFile(image, filename);
+        writeSubpaletteMappingToFile(subpaletteList, subpaletteMapping, filename);
     }
+
 }

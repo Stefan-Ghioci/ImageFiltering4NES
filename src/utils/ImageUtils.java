@@ -4,10 +4,7 @@ import processing.PixelColor;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +65,7 @@ public class ImageUtils
         for (int x = 0; x < STD_WIDTH; x++)
             for (int y = 0; y < STD_HEIGHT; y++)
             {
-                if(image[x][y] == null) System.out.println("x=" + x + ",y=" + y);
+                if (image[x][y] == null) System.out.println("x=" + x + ",y=" + y);
                 bufferedImage.setRGB(x, y, image[x][y].toInt());
             }
 
@@ -76,6 +73,38 @@ public class ImageUtils
         try
         {
             ImageIO.write(bufferedImage, "bmp", outputFile);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeSubpaletteMappingToFile(List<List<PixelColor>> subpaletteList,
+                                                    List<Integer> subpaletteMapping,
+                                                    String filename)
+    {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("generated/" + filename + ".txt")))
+        {
+            for (List<PixelColor> pixelColors : subpaletteList)
+                for (PixelColor pixelColor : pixelColors)
+
+                {
+                    writer.write(pixelColor.getRed() +
+                                 " " +
+                                 pixelColor.getGreen() +
+                                 " " +
+                                 pixelColor.getBlue());
+                    writer.newLine();
+                }
+
+            for (int i = 0; i < subpaletteMapping.size(); i++)
+            {
+                Integer subpaletteIndex = subpaletteMapping.get(i);
+                writer.write(subpaletteIndex + " ");
+                if ((i + 1) % (STD_WIDTH / BLOCK_SIZE) == 0)
+                    writer.newLine();
+            }
         }
         catch (IOException e)
         {
