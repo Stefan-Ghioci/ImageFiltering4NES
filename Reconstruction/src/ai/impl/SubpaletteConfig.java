@@ -1,7 +1,7 @@
 package ai.impl;
 
 import ai.Individual;
-import processing.PixelColor;
+import model.PixelColor;
 import utils.ColorMathUtils;
 
 import java.util.List;
@@ -11,8 +11,8 @@ import static utils.ImageUtils.*;
 
 public class SubpaletteConfig implements Individual
 {
-    private PixelColor[][] image;
-    private List<List<PixelColor>> subpaletteList;
+    private final PixelColor[][] image;
+    private final List<List<PixelColor>> subpaletteList;
     double fitness;
 
     public SubpaletteConfig(List<List<PixelColor>> subpaletteList, PixelColor[][] image)

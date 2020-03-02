@@ -1,6 +1,6 @@
 package utils;
 
-import processing.PixelColor;
+import model.PixelColor;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

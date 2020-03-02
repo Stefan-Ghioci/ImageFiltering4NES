@@ -3,7 +3,7 @@ import ai.impl.SubpaletteConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import processing.ImageProcessing;
-import processing.PixelColor;
+import model.PixelColor;
 import utils.ImageUtils;
 
 import java.util.List;

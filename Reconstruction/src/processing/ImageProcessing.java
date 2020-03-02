@@ -1,5 +1,6 @@
 package processing;
 
+import model.PixelColor;
 import utils.ColorMathUtils;
 
 import java.util.ArrayList;

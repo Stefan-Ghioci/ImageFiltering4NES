@@ -1,6 +1,6 @@
 package utils;
 
-import processing.PixelColor;
+import model.PixelColor;
 
 import java.util.List;
 

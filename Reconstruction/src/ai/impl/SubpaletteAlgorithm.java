@@ -2,7 +2,7 @@ package ai.impl;
 
 import ai.EvolutionaryAlgorithm;
 import ai.Individual;
-import processing.PixelColor;
+import model.PixelColor;
 
 import java.util.ArrayList;
 import java.util.Comparator;
