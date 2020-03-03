@@ -8,8 +8,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static model.Constants.*;
 
@@ -59,11 +57,38 @@ public class ImageUtils
         return image;
     }
 
+    public static void saveFile(List<BlockMapping> blockMappingList, String filename)
+    {
+        BufferedImage bufferedImage = new BufferedImage(STD_WIDTH, STD_HEIGHT, BufferedImage.TYPE_INT_RGB);
+
+        for (BlockMapping blockMapping : blockMappingList)
+        {
+            int x = blockMapping.getRow() * BLOCK_SIZE;
+            int y = blockMapping.getColumn() * BLOCK_SIZE;
+            Integer[][] mapping = blockMapping.getMapping();
+            List<PixelColor> subpalette = blockMapping.getSubpalette();
+
+            for (int i = 0; i < BLOCK_SIZE; i++)
+                for (int j = 0; j < BLOCK_SIZE; j++)
+                {
+                    bufferedImage.setRGB(x + i, y + j, subpalette.get(mapping[i][j]).toInt());
+                }
+
+            File outputFile = new File("solution/" + filename + ".bmp");
+            try
+            {
+                ImageIO.write(bufferedImage, "bmp", outputFile);
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public static void saveFile(PixelColor[][] image, String filename)
     {
-        BufferedImage
-                bufferedImage =
-                new BufferedImage(STD_WIDTH, STD_HEIGHT, BufferedImage.TYPE_INT_RGB);
+        BufferedImage bufferedImage = new BufferedImage(STD_WIDTH, STD_HEIGHT, BufferedImage.TYPE_INT_RGB);
 
         for (int x = 0; x < STD_WIDTH; x++)
             for (int y = 0; y < STD_HEIGHT; y++)
@@ -116,10 +141,14 @@ public class ImageUtils
 
     public static List<BlockMapping> loadGeneratedBlockMappings(String filename)
     {
+        List<BlockMapping> blockMappingList = new ArrayList<>();
+
         try (BufferedReader reader = new BufferedReader(new FileReader("generated/" + filename + ".txt")))
         {
-            List<BlockMapping> blockMappings = new ArrayList<>();
             List<List<PixelColor>> subpaletteList = new ArrayList<>();
+            Integer[][] subpaletteMappingList = new Integer
+                    [STD_WIDTH / BLOCK_GROUP_SIZE]
+                    [STD_HEIGHT / BLOCK_GROUP_SIZE];
 
             for (int i = 0; i < 4; i++)
             {
@@ -135,14 +164,41 @@ public class ImageUtils
                 subpaletteList.add(subpalette);
             }
 
-            //TODO
-            BufferedImage bufferedImage = ImageIO.read(new File("images/" + filename + ".bmp"));
+            for (int y = 0; y < STD_HEIGHT / BLOCK_GROUP_SIZE; y++)
+            {
+                String[] split = reader.readLine().split(" ");
+                for (int x = 0; x < STD_WIDTH / BLOCK_GROUP_SIZE; x++)
+                    subpaletteMappingList[x][y] = Integer.valueOf(split[x]);
+            }
+
+            BufferedImage bufferedImage = ImageIO.read(new File("generated/" + filename + ".bmp"));
+
+            for (int x = 0; x < STD_WIDTH; x += BLOCK_SIZE)
+                for (int y = 0; y < STD_HEIGHT; y += BLOCK_SIZE)
+                {
+                    Integer[][] mapping = new Integer[BLOCK_SIZE][BLOCK_SIZE];
+                    int row = x / BLOCK_SIZE;
+                    int column = y / BLOCK_SIZE;
+
+                    List<PixelColor> subpalette = subpaletteList
+                            .get(subpaletteMappingList
+                                         [row / (BLOCK_GROUP_SIZE / BLOCK_SIZE)]
+                                         [column / (BLOCK_GROUP_SIZE / BLOCK_SIZE)]
+                                );
+
+                    for (int i = 0; i < BLOCK_SIZE; i++)
+                        for (int j = 0; j < BLOCK_SIZE; j++)
+                            mapping[i][j] =
+                                    subpalette.indexOf(new PixelColor(bufferedImage.getRGB(x + i, y + j)));
+
+                    blockMappingList.add(new BlockMapping(row, column, mapping, subpalette));
+                }
 
         }
         catch (IOException e)
         {
             e.printStackTrace();
         }
-        return null;
+        return blockMappingList;
     }
 }

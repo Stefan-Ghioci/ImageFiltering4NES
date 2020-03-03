@@ -1,16 +1,25 @@
 package model;
 
+import java.util.List;
+
 public class BlockMapping
 {
     Integer row;
     Integer column;
     Integer[][] mapping;
+    List<PixelColor> subpalette;
 
-    public BlockMapping(Integer row, Integer column, Integer[][] mapping)
+    public BlockMapping(Integer row, Integer column, Integer[][] mapping, List<PixelColor> subpalette)
     {
         this.row = row;
         this.column = column;
         this.mapping = mapping;
+        this.subpalette = subpalette;
+    }
+
+    public List<PixelColor> getSubpalette()
+    {
+        return subpalette;
     }
 
     public Integer getRow()

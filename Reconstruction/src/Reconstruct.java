@@ -8,9 +8,9 @@ import utils.ImageUtils;
 
 import java.util.List;
 
-public class Start
+public class Reconstruct
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Start.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Reconstruct.class);
 
     public static void main(String[] args)
     {
