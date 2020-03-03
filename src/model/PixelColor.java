@@ -8,6 +8,7 @@ public class PixelColor
 
     private final int blue;
     private final int green;
+
     public PixelColor(int red, int green, int blue)
     {
         this.red = red;
@@ -74,5 +75,10 @@ public class PixelColor
     public int getGreen()
     {
         return green;
+    }
+
+    public int getLuminance()
+    {
+        return (int) (0.241 * red + 0.691 * green + 0.068 * blue);
     }
 }

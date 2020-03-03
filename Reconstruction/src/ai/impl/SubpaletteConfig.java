@@ -1,13 +1,12 @@
 package ai.impl;
 
 import ai.Individual;
+import model.Constants;
 import model.PixelColor;
 import utils.ColorMathUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static utils.ImageUtils.*;
 
 public class SubpaletteConfig implements Individual
 {
@@ -32,14 +31,14 @@ public class SubpaletteConfig implements Individual
     @Override
     public void evaluate()
     {
-        for (int x = 0; x < STD_WIDTH; x += BLOCK_SIZE)
-            for (int y = 0; y < STD_HEIGHT; y += BLOCK_SIZE)
+        for (int x = 0; x < Constants.STD_WIDTH; x += Constants.BLOCK_GROUP_SIZE)
+            for (int y = 0; y < Constants.STD_HEIGHT; y += Constants.BLOCK_GROUP_SIZE)
             {
                 double minDiffSum = ColorMathUtils.getMinDiffSumPerBlock(x, y, subpaletteList, image);
 
-                fitness += (minDiffSum / (BLOCK_SIZE * BLOCK_SIZE));
+                fitness += (minDiffSum / (Constants.BLOCK_GROUP_SIZE * Constants.BLOCK_GROUP_SIZE));
             }
-        int blocks = (STD_HEIGHT * STD_WIDTH) / (BLOCK_SIZE * BLOCK_SIZE);
+        int blocks = (Constants.STD_HEIGHT * Constants.STD_WIDTH) / (Constants.BLOCK_GROUP_SIZE * Constants.BLOCK_GROUP_SIZE);
         fitness = fitness / blocks;
     }
 

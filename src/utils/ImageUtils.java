@@ -1,5 +1,6 @@
 package utils;
 
+import model.BlockMapping;
 import model.PixelColor;
 
 import javax.imageio.ImageIO;
@@ -7,13 +8,13 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static model.Constants.*;
 
 public class ImageUtils
 {
-
-    public final static int STD_HEIGHT = 240;
-    public final static int STD_WIDTH = 256;
-    public final static int BLOCK_SIZE = 16;
 
     public static List<PixelColor> loadNESPalette()
     {
@@ -60,12 +61,13 @@ public class ImageUtils
 
     public static void saveFile(PixelColor[][] image, String filename)
     {
-        BufferedImage bufferedImage = new BufferedImage(STD_WIDTH, STD_HEIGHT, BufferedImage.TYPE_INT_RGB);
+        BufferedImage
+                bufferedImage =
+                new BufferedImage(STD_WIDTH, STD_HEIGHT, BufferedImage.TYPE_INT_RGB);
 
         for (int x = 0; x < STD_WIDTH; x++)
             for (int y = 0; y < STD_HEIGHT; y++)
             {
-                if (image[x][y] == null) System.out.println("x=" + x + ",y=" + y);
                 bufferedImage.setRGB(x, y, image[x][y].toInt());
             }
 
@@ -102,7 +104,7 @@ public class ImageUtils
             {
                 Integer subpaletteIndex = subpaletteMapping.get(i);
                 writer.write(subpaletteIndex + " ");
-                if ((i + 1) % (STD_WIDTH / BLOCK_SIZE) == 0)
+                if ((i + 1) % (STD_WIDTH / BLOCK_GROUP_SIZE) == 0)
                     writer.newLine();
             }
         }
@@ -110,5 +112,37 @@ public class ImageUtils
         {
             e.printStackTrace();
         }
+    }
+
+    public static List<BlockMapping> loadGeneratedBlockMappings(String filename)
+    {
+        try (BufferedReader reader = new BufferedReader(new FileReader("generated/" + filename + ".txt")))
+        {
+            List<BlockMapping> blockMappings = new ArrayList<>();
+            List<List<PixelColor>> subpaletteList = new ArrayList<>();
+
+            for (int i = 0; i < 4; i++)
+            {
+                List<PixelColor> subpalette = new ArrayList<>();
+                for (int j = 0; j < 4; j++)
+                {
+                    String[] split = reader.readLine().split(" ");
+                    int red = Integer.parseInt(split[0]);
+                    int green = Integer.parseInt(split[1]);
+                    int blue = Integer.parseInt(split[2]);
+                    subpalette.add(new PixelColor(red, green, blue));
+                }
+                subpaletteList.add(subpalette);
+            }
+
+            //TODO
+            BufferedImage bufferedImage = ImageIO.read(new File("images/" + filename + ".bmp"));
+
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

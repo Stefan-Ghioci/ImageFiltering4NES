@@ -1,5 +1,6 @@
 package processing;
 
+import model.Constants;
 import model.PixelColor;
 import utils.ColorMathUtils;
 
@@ -11,8 +12,7 @@ import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static utils.ColorMathUtils.bestMatch;
-import static utils.ColorMathUtils.getBestSubpalettePerBlock;
+import static utils.ColorMathUtils.*;
 import static utils.ImageUtils.*;
 
 public class ImageProcessing
@@ -51,20 +51,20 @@ public class ImageProcessing
                                         String filename,
                                         boolean dither)
     {
-        PixelColor[][] image = new PixelColor[STD_WIDTH][STD_HEIGHT];
+        PixelColor[][] image = new PixelColor[Constants.STD_WIDTH][Constants.STD_HEIGHT];
 
         if (!dither)
-            for (int x = 0; x < STD_WIDTH; x++)
-                for (int y = 0; y < STD_HEIGHT; y++)
+            for (int x = 0; x < Constants.STD_WIDTH; x++)
+                for (int y = 0; y < Constants.STD_HEIGHT; y++)
                     image[x][y] = bestMatch(originalImage[x][y], palette);
         else
         {
             // array copy originalImage into image
-            IntStream.range(0, STD_WIDTH)
-                     .forEach(x -> System.arraycopy(originalImage[x], 0, image[x], 0, STD_HEIGHT));
+            IntStream.range(0, Constants.STD_WIDTH)
+                     .forEach(x -> System.arraycopy(originalImage[x], 0, image[x], 0, Constants.STD_HEIGHT));
 
-            for (int y = 0; y < STD_HEIGHT; y++)
-                for (int x = 0; x < STD_WIDTH; x++)
+            for (int y = 0; y < Constants.STD_HEIGHT; y++)
+                for (int x = 0; x < Constants.STD_WIDTH; x++)
                 {
                     PixelColor oldPixel = image[x][y];
                     PixelColor newPixel = bestMatch(oldPixel, palette);
@@ -82,19 +82,21 @@ public class ImageProcessing
     public static void reconstruct(PixelColor[][] originalImage, List<List<PixelColor>> subpaletteList, String filename)
     {
 
-        PixelColor[][] image = new PixelColor[STD_WIDTH][STD_HEIGHT];
+        PixelColor[][] image = new PixelColor[Constants.STD_WIDTH][Constants.STD_HEIGHT];
         List<Integer> subpaletteMapping = new ArrayList<>();
 
-        for (int x = 0; x < STD_WIDTH; x += BLOCK_SIZE)
+        subpaletteList.forEach(subpalette -> subpalette.sort(Comparator.comparingInt(PixelColor::getLuminance)));
+
+        for (int x = 0; x < Constants.STD_WIDTH; x += Constants.BLOCK_GROUP_SIZE)
         {
-            for (int y = 0; y < STD_HEIGHT; y += BLOCK_SIZE)
+            for (int y = 0; y < Constants.STD_HEIGHT; y += Constants.BLOCK_GROUP_SIZE)
             {
                 List<PixelColor> subpalette = getBestSubpalettePerBlock(x, y, subpaletteList, originalImage);
 
                 subpaletteMapping.add(subpaletteList.indexOf(subpalette));
 
-                for (int i = 0; i < BLOCK_SIZE; i++)
-                    for (int j = 0; j < BLOCK_SIZE; j++)
+                for (int i = 0; i < Constants.BLOCK_GROUP_SIZE; i++)
+                    for (int j = 0; j < Constants.BLOCK_GROUP_SIZE; j++)
                     {
                         PixelColor bestMatch = bestMatch(originalImage[x + i][y + j], subpalette);
                         image[x + i][y + j] = bestMatch;

@@ -4,7 +4,7 @@ import model.PixelColor;
 
 import java.util.List;
 
-import static utils.ImageUtils.BLOCK_SIZE;
+import static model.Constants.BLOCK_GROUP_SIZE;
 
 public class ColorMathUtils
 {
@@ -78,8 +78,8 @@ public class ColorMathUtils
         {
             double diffSum = 0;
 
-            for (int i = 0; i < BLOCK_SIZE; i++)
-                for (int j = 0; j < BLOCK_SIZE; j++)
+            for (int i = 0; i < BLOCK_GROUP_SIZE; i++)
+                for (int j = 0; j < BLOCK_GROUP_SIZE; j++)
                 {
                     PixelColor color = image[x + i][y + j];
                     PixelColor bestMatch = bestMatch(color, subpalette);
@@ -103,8 +103,8 @@ public class ColorMathUtils
         {
             double diffSum = 0;
 
-            for (int i = 0; i < BLOCK_SIZE; i++)
-                for (int j = 0; j < BLOCK_SIZE; j++)
+            for (int i = 0; i < BLOCK_GROUP_SIZE; i++)
+                for (int j = 0; j < BLOCK_GROUP_SIZE; j++)
                 {
                     PixelColor color = image[x + i][y + j];
                     PixelColor bestMatch = bestMatch(color, subpalette);
