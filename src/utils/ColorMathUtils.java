@@ -4,7 +4,7 @@ import model.PixelColor;
 
 import java.util.List;
 
-import static model.Constants.BLOCK_GROUP_SIZE;
+import static model.Constants.*;
 
 public class ColorMathUtils
 {
@@ -117,5 +117,17 @@ public class ColorMathUtils
             }
         }
         return minSubpalette;
+    }
+
+    public static double calculateAvgDiff(PixelColor[][] image1, PixelColor[][] image2)
+    {
+        double pixelCount = STD_WIDTH * STD_HEIGHT;
+        double diffSum = 0;
+
+        for (int x = 0; x < STD_WIDTH; x++)
+            for (int y = 0; y < STD_HEIGHT; y++)
+                diffSum += computeColorDiffSquared(image1[x][y], image2[x][y]);
+
+        return diffSum / pixelCount;
     }
 }

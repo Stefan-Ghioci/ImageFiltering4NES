@@ -19,7 +19,7 @@ public class Reconstruct
         int stagnationFactor = Integer.parseInt(args[2]);
         double mutationChance = Double.parseDouble(args[3]);
 
-        PixelColor[][] originalImage = ImageUtils.loadFile(filename);
+        PixelColor[][] originalImage = ImageUtils.loadFile("images/" + filename + ".bmp");
 
         List<PixelColor> nesPalette = ImageUtils.loadNESPalette();
         List<PixelColor> bestPalette = ImageProcessing.computeBestPalette(originalImage, nesPalette);
@@ -38,7 +38,7 @@ public class Reconstruct
             SubpaletteConfig bestConfig = algorithm.run(populationSize, stagnationFactor, mutationChance);
             List<List<PixelColor>> subpalettes = bestConfig.getSolution();
 
-            String resultFilename = filename + "_ai_nes_raw_" + (int) bestConfig.getFitness();
+            String resultFilename = "generated/" + filename + "_ai_nes_raw_" + (int) bestConfig.getFitness() + ".bmp";
             ImageProcessing.reconstruct(nesRawImage, subpalettes, resultFilename);
         }
         {
@@ -48,7 +48,7 @@ public class Reconstruct
             SubpaletteConfig bestConfig = algorithm.run(populationSize, stagnationFactor, mutationChance);
             List<List<PixelColor>> subpalettes = bestConfig.getSolution();
 
-            String resultFilename = filename + "_ai_nes_dithered_" + (int) bestConfig.getFitness();
+            String resultFilename = "generated/" + filename + "_ai_nes_dithered_" + (int) bestConfig.getFitness() + ".bmp";
             ImageProcessing.reconstruct(nesDitheredImage, subpalettes, resultFilename);
         }
         {
@@ -58,7 +58,7 @@ public class Reconstruct
             SubpaletteConfig bestConfig = algorithm.run(populationSize, stagnationFactor, mutationChance);
             List<List<PixelColor>> subpalettes = bestConfig.getSolution();
 
-            String resultFilename = filename + "_ai_best_raw_" + (int) bestConfig.getFitness();
+            String resultFilename = "generated/" + filename + "_ai_best_raw_" + (int) bestConfig.getFitness() + ".bmp";
             ImageProcessing.reconstruct(bestRawImage, subpalettes, resultFilename);
         }
         {
@@ -68,7 +68,7 @@ public class Reconstruct
             SubpaletteConfig bestConfig = algorithm.run(populationSize, stagnationFactor, mutationChance);
             List<List<PixelColor>> subpalettes = bestConfig.getSolution();
 
-            String resultFilename = filename + "_ai_best_dithered_" + (int) bestConfig.getFitness();
+            String resultFilename = "generated/" + filename + "_ai_best_dithered_" + (int) bestConfig.getFitness() + ".bmp";
             ImageProcessing.reconstruct(bestDitheredImage, subpalettes, resultFilename);
         }
     }

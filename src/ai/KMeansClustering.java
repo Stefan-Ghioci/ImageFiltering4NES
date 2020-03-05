@@ -86,7 +86,11 @@ public abstract class KMeansClustering<Entity>
         }
         while (anyClusterModified);
 
-        return new ArrayList<>(clusterMap.values());
+
+        return clusterMap.values()
+                         .stream()
+                         .filter(cluster -> !cluster.isEmpty())
+                         .collect(Collectors.toList());
     }
 
 

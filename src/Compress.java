@@ -1,10 +1,15 @@
 import ai.KMeansClustering;
 import ai.impl.BlockMappingClustering;
 import model.BlockMapping;
-import model.Constants;
+import model.PixelColor;
+import processing.ImageProcessing;
+import utils.ColorMathUtils;
 import utils.ImageUtils;
 
+import java.io.File;
 import java.util.List;
+
+import static model.Constants.CLUSTER_COUNT;
 
 public class Compress
 {
@@ -13,11 +18,23 @@ public class Compress
         String filename = args[0];
         int iterationCount = Integer.parseInt(args[1]);
 
-        List<BlockMapping> blockMappingList = ImageUtils.loadGeneratedBlockMappings(filename);
+        File textFile = new File("generated/" + filename + ".txt");
+        PixelColor[][] image = ImageUtils.loadFile("generated/" + filename + ".bmp");
+
+        List<BlockMapping> blockMappingList = ImageUtils.loadGeneratedBlockMappings(textFile, image);
+
         KMeansClustering<BlockMapping> algorithm = new BlockMappingClustering();
 
-        List<List<BlockMapping>> clusteredBlockMappingList = algorithm.run(blockMappingList, Constants.CLUSTER_COUNT, iterationCount);
+        List<List<BlockMapping>> clusteredBlockMappingList = algorithm.run(blockMappingList,
+                                                                           CLUSTER_COUNT,
+                                                                           iterationCount);
 
-        ImageUtils.saveFile(blockMappingList, filename + "_compressed");
+        List<BlockMapping> compressedBlockMappingList = ImageProcessing.compress(clusteredBlockMappingList, image);
+
+        PixelColor[][] compressedImage = ImageUtils.convertBlockMappingsToPixelArray(compressedBlockMappingList);
+
+        double avgDiff = ColorMathUtils.calculateAvgDiff(compressedImage, image);
+
+        ImageUtils.saveFile(compressedImage, "solution/" + filename + "_compressed_" + (int) avgDiff + ".bmp");
     }
 }

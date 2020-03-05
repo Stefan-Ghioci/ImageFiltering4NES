@@ -1,5 +1,6 @@
 package processing;
 
+import model.BlockMapping;
 import model.PixelColor;
 import utils.ColorMathUtils;
 
@@ -105,6 +106,32 @@ public class ImageProcessing
             }
         saveFile(image, filename);
         writeSubpaletteMappingToFile(subpaletteList, subpaletteMapping, filename);
+    }
+
+    public static List<BlockMapping> compress(List<List<BlockMapping>> clusteredBlockMappingList,
+                                              PixelColor[][] image)
+    {
+        List<BlockMapping> compressedBlockMappingList = new ArrayList<>();
+
+        for (List<BlockMapping> cluster : clusteredBlockMappingList)
+        {
+
+            // TODO: implement best fit from cluster
+            BlockMapping bestFit = cluster.get((int) (Math.random() * cluster.size()));
+
+            for (BlockMapping blockMapping : cluster)
+            {
+                List<PixelColor> subpalette = blockMapping.getSubpalette();
+                Integer row = blockMapping.getRow();
+                Integer column = blockMapping.getColumn();
+
+                Integer[][] mapping = bestFit.getMapping();
+
+                compressedBlockMappingList.add(new BlockMapping(row, column, mapping, subpalette));
+            }
+        }
+
+        return compressedBlockMappingList;
     }
 
 }

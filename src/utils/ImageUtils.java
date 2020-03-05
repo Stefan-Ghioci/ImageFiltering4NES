@@ -44,7 +44,7 @@ public class ImageUtils
         PixelColor[][] image = new PixelColor[STD_WIDTH][STD_HEIGHT];
         try
         {
-            BufferedImage bufferedImage = ImageIO.read(new File("images/" + filename + ".bmp"));
+            BufferedImage bufferedImage = ImageIO.read(new File(filename));
 
             for (int x = 0; x < STD_WIDTH; x++)
                 for (int y = 0; y < STD_HEIGHT; y++)
@@ -57,9 +57,9 @@ public class ImageUtils
         return image;
     }
 
-    public static void saveFile(List<BlockMapping> blockMappingList, String filename)
+    public static PixelColor[][] convertBlockMappingsToPixelArray(List<BlockMapping> blockMappingList)
     {
-        BufferedImage bufferedImage = new BufferedImage(STD_WIDTH, STD_HEIGHT, BufferedImage.TYPE_INT_RGB);
+        PixelColor[][] image = new PixelColor[STD_WIDTH][STD_HEIGHT];
 
         for (BlockMapping blockMapping : blockMappingList)
         {
@@ -71,19 +71,11 @@ public class ImageUtils
             for (int i = 0; i < BLOCK_SIZE; i++)
                 for (int j = 0; j < BLOCK_SIZE; j++)
                 {
-                    bufferedImage.setRGB(x + i, y + j, subpalette.get(mapping[i][j]).toInt());
+                    image[x + i][y + j] = subpalette.get(mapping[i][j]);
                 }
 
-            File outputFile = new File("solution/" + filename + ".bmp");
-            try
-            {
-                ImageIO.write(bufferedImage, "bmp", outputFile);
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
         }
+        return image;
     }
 
     public static void saveFile(PixelColor[][] image, String filename)
@@ -96,7 +88,7 @@ public class ImageUtils
                 bufferedImage.setRGB(x, y, image[x][y].toInt());
             }
 
-        File outputFile = new File("generated/" + filename + ".bmp");
+        File outputFile = new File(filename);
         try
         {
             ImageIO.write(bufferedImage, "bmp", outputFile);
@@ -139,11 +131,11 @@ public class ImageUtils
         }
     }
 
-    public static List<BlockMapping> loadGeneratedBlockMappings(String filename)
+    public static List<BlockMapping> loadGeneratedBlockMappings(File textFile, PixelColor[][] image)
     {
         List<BlockMapping> blockMappingList = new ArrayList<>();
 
-        try (BufferedReader reader = new BufferedReader(new FileReader("generated/" + filename + ".txt")))
+        try (BufferedReader reader = new BufferedReader(new FileReader(textFile)))
         {
             List<List<PixelColor>> subpaletteList = new ArrayList<>();
             Integer[][] subpaletteMappingList = new Integer
@@ -171,7 +163,6 @@ public class ImageUtils
                     subpaletteMappingList[x][y] = Integer.valueOf(split[x]);
             }
 
-            BufferedImage bufferedImage = ImageIO.read(new File("generated/" + filename + ".bmp"));
 
             for (int x = 0; x < STD_WIDTH; x += BLOCK_SIZE)
                 for (int y = 0; y < STD_HEIGHT; y += BLOCK_SIZE)
@@ -189,7 +180,7 @@ public class ImageUtils
                     for (int i = 0; i < BLOCK_SIZE; i++)
                         for (int j = 0; j < BLOCK_SIZE; j++)
                             mapping[i][j] =
-                                    subpalette.indexOf(new PixelColor(bufferedImage.getRGB(x + i, y + j)));
+                                    subpalette.indexOf(image[x + i][y + j]);
 
                     blockMappingList.add(new BlockMapping(row, column, mapping, subpalette));
                 }
