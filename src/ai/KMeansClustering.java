@@ -28,6 +28,7 @@ public abstract class KMeansClustering<Entity>
         {
             anyClusterModified = false;
 
+//            LOGGER.info("Clustering entities...");
             for (Entity entity : entities)
             {
                 Entity nearestCentroid = clusterMap.keySet().iterator().next();
@@ -48,28 +49,46 @@ public abstract class KMeansClustering<Entity>
             }
 
             List<Entity> newCentroids = new ArrayList<>();
+            int reCentered = 0;
+
+//            LOGGER.info("Averaging centroids for clustered entities...");
 
             for (Map.Entry<Entity, List<Entity>> entry : clusterMap.entrySet())
             {
+
                 Entity centroid = entry.getKey();
                 List<Entity> cluster = entry.getValue();
 
-                Entity newCentroid = calculateAverage(cluster);
+                if (cluster.size() != 0)
+                {
+                    Entity newCentroid = calculateAverage(cluster);
 
-                if (newCentroid != centroid)
+                    if (calculateDistance(newCentroid, centroid) > 0)
+                    {
+                        anyClusterModified = true;
+                        reCentered++;
+                    }
                     newCentroids.add(newCentroid);
+                }
+                else
+                    newCentroids.add(centroid);
             }
 
-            if (!newCentroids.isEmpty())
+            if (anyClusterModified)
             {
-                anyClusterModified = true;
+                LOGGER.info("{} centroids re-centered ", reCentered);
                 clusterMap = initializeClusterMap(newCentroids);
             }
+            else
+                LOGGER.info("Centroids converged, iteration finished!");
+
+            //TODO multiple iterations, keep best (compare vs original image)
         }
         while (anyClusterModified);
 
         return new ArrayList<>(clusterMap.values());
     }
+
 
     private Map<Entity, List<Entity>> initializeClusterMap(List<Entity> centroids)
     {
