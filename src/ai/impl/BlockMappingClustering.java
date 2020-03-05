@@ -14,7 +14,7 @@ public class BlockMappingClustering extends KMeansClustering<BlockMapping>
 {
 
     @Override
-    protected BlockMapping calculateAverage(List<BlockMapping> cluster)
+    protected BlockMapping center(List<BlockMapping> cluster)
     {
         Integer[][] mapping = new Integer[BLOCK_SIZE][BLOCK_SIZE];
 

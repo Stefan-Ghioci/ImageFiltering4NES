@@ -9,88 +9,119 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static model.Constants.CLUSTER_COUNT;
+
 public abstract class KMeansClustering<Entity>
 {
     final static Logger LOGGER = LoggerFactory.getLogger(KMeansClustering.class);
 
-    public List<List<Entity>> run(List<Entity> entities, int clusterCount, int iterationCount)
+    public List<List<Entity>> run(List<Entity> entities, int iterationCount)
     {
         LOGGER.info("Running K-means clustering for {} blocks into {} clusters for {} iterations",
                     entities.size(),
-                    clusterCount,
+                    CLUSTER_COUNT,
                     iterationCount);
 
-        Map<Entity, List<Entity>> clusterMap = generateClusterMap(clusterCount);
 
         boolean anyClusterModified;
+        List<List<Entity>> bestClusteredEntitiesList = null;
+        double minVariance = -1;
 
-        do
+        for (int i = 0; i < iterationCount; i++)
         {
-            anyClusterModified = false;
+            Map<Entity, List<Entity>> clusterMap = generateClusterMap();
+            int loopCounter = 0;
+
+            do
+            {
+                anyClusterModified = false;
 
 //            LOGGER.info("Clustering entities...");
-            for (Entity entity : entities)
-            {
-                Entity nearestCentroid = clusterMap.keySet().iterator().next();
-                double minDistance = calculateDistance(entity, nearestCentroid);
-
-                for (Entity centroid : clusterMap.keySet())
+                for (Entity entity : entities)
                 {
-                    double distance = calculateDistance(entity, centroid);
+                    Entity nearestCentroid = clusterMap.keySet().iterator().next();
+                    double minDistance = calculateDistance(entity, nearestCentroid);
 
-                    if (distance < minDistance)
+                    for (Entity centroid : clusterMap.keySet())
                     {
-                        minDistance = distance;
-                        nearestCentroid = centroid;
+                        double distance = calculateDistance(entity, centroid);
+
+                        if (distance < minDistance)
+                        {
+                            minDistance = distance;
+                            nearestCentroid = centroid;
+                        }
                     }
+
+                    clusterMap.get(nearestCentroid).add(entity);
                 }
 
-                clusterMap.get(nearestCentroid).add(entity);
-            }
-
-            List<Entity> newCentroids = new ArrayList<>();
-            int reCentered = 0;
+                List<Entity> newCentroids = new ArrayList<>();
+                int reCentered = 0;
 
 //            LOGGER.info("Averaging centroids for clustered entities...");
 
-            for (Map.Entry<Entity, List<Entity>> entry : clusterMap.entrySet())
-            {
-
-                Entity centroid = entry.getKey();
-                List<Entity> cluster = entry.getValue();
-
-                if (cluster.size() != 0)
+                for (Map.Entry<Entity, List<Entity>> entry : clusterMap.entrySet())
                 {
-                    Entity newCentroid = calculateAverage(cluster);
 
-                    if (calculateDistance(newCentroid, centroid) > 0)
+                    Entity centroid = entry.getKey();
+                    List<Entity> cluster = entry.getValue();
+
+                    if (cluster.size() != 0)
                     {
-                        anyClusterModified = true;
-                        reCentered++;
+                        Entity newCentroid = center(cluster);
+
+                        if (calculateDistance(newCentroid, centroid) > 0)
+                        {
+                            anyClusterModified = true;
+                            reCentered++;
+                        }
+                        newCentroids.add(newCentroid);
                     }
-                    newCentroids.add(newCentroid);
+                    else
+                        newCentroids.add(centroid);
                 }
-                else
-                    newCentroids.add(centroid);
-            }
 
-            if (anyClusterModified)
+                if (anyClusterModified)
+                {
+//                    LOGGER.info("{} centroids re-centered ", reCentered);
+                    loopCounter++;
+                    clusterMap = initializeClusterMap(newCentroids);
+                }
+
+            }
+            while (anyClusterModified);
+
+
+            List<List<Entity>> clusteredEntitiesList = new ArrayList<>(clusterMap.values());
+
+            double variance = computeVariance(clusteredEntitiesList);
+            if (minVariance == -1 || minVariance > variance)
             {
-                LOGGER.info("{} centroids re-centered ", reCentered);
-                clusterMap = initializeClusterMap(newCentroids);
+                minVariance = variance;
+                bestClusteredEntitiesList = clusteredEntitiesList;
             }
-            else
-                LOGGER.info("Centroids converged, iteration finished!");
-
-            //TODO multiple iterations, keep best (compare vs original image)
+            LOGGER.info("Centroids converged after {} re-centerings on iteration {}, variance {}",
+                        loopCounter,
+                        i,
+                        (int) variance);
         }
-        while (anyClusterModified);
 
+        assert bestClusteredEntitiesList != null;
+        return bestClusteredEntitiesList.stream()
+                                        .filter(cluster -> !cluster.isEmpty())
+                                        .collect(Collectors.toList());
+    }
 
-        return clusterMap.values()
-                         .stream()
-                         .filter(cluster -> !cluster.isEmpty())
-                         .collect(Collectors.toList());
+    private double computeVariance(List<List<Entity>> clusteredEntitiesList)
+    {
+        double mean = clusteredEntitiesList.stream()
+                                           .mapToDouble(List::size)
+                                           .sum() / CLUSTER_COUNT;
+
+        return clusteredEntitiesList.stream()
+                                    .mapToDouble(cluster -> Math.pow(cluster.size() - mean, 2))
+                                    .sum() / CLUSTER_COUNT;
     }
 
 
@@ -100,16 +131,16 @@ public abstract class KMeansClustering<Entity>
                         .collect(Collectors.toMap(centroid -> centroid, centroid -> new ArrayList<>(), (a, b) -> b));
     }
 
-    protected abstract Entity calculateAverage(List<Entity> cluster);
-
-    protected abstract double calculateDistance(Entity entity, Entity centroid);
-
-    private Map<Entity, List<Entity>> generateClusterMap(int clusterCount)
+    private Map<Entity, List<Entity>> generateClusterMap()
     {
-        return IntStream.range(0, clusterCount)
+        return IntStream.range(0, CLUSTER_COUNT)
                         .boxed()
                         .collect(Collectors.toMap(i -> generateCentroid(), i -> new ArrayList<>(), (a, b) -> b));
     }
+
+    protected abstract Entity center(List<Entity> cluster);
+
+    protected abstract double calculateDistance(Entity entity, Entity centroid);
 
     protected abstract Entity generateCentroid();
 }

@@ -9,8 +9,6 @@ import utils.ImageUtils;
 import java.io.File;
 import java.util.List;
 
-import static model.Constants.CLUSTER_COUNT;
-
 public class Compress
 {
     public static void main(String[] args)
@@ -23,14 +21,11 @@ public class Compress
 
         List<BlockMapping> blockMappingList = ImageUtils.loadGeneratedBlockMappings(textFile, image);
 
+
         KMeansClustering<BlockMapping> algorithm = new BlockMappingClustering();
 
-        List<List<BlockMapping>> clusteredBlockMappingList = algorithm.run(blockMappingList,
-                                                                           CLUSTER_COUNT,
-                                                                           iterationCount);
-
+        List<List<BlockMapping>> clusteredBlockMappingList = algorithm.run(blockMappingList, iterationCount);
         List<BlockMapping> compressedBlockMappingList = ImageProcessing.compress(clusteredBlockMappingList, image);
-
         PixelColor[][] compressedImage = ImageUtils.convertBlockMappingsToPixelArray(compressedBlockMappingList);
 
         double avgDiff = ColorMathUtils.calculateAvgDiff(compressedImage, image);

@@ -1,5 +1,6 @@
 package utils;
 
+import model.BlockMapping;
 import model.PixelColor;
 
 import java.util.List;
@@ -129,5 +130,42 @@ public class ColorMathUtils
                 diffSum += computeColorDiffSquared(image1[x][y], image2[x][y]);
 
         return diffSum / pixelCount;
+    }
+
+    public static BlockMapping bestFitMapping(List<BlockMapping> cluster, PixelColor[][] image)
+    {
+        double minDiffSum = calculateDiffSumPerBlock(cluster.get(0), image);
+        BlockMapping bestFit = cluster.get(0);
+
+        for (BlockMapping blockMapping : cluster)
+        {
+            double diffSum = calculateDiffSumPerBlock(blockMapping, image);
+
+            if (diffSum < minDiffSum)
+            {
+                minDiffSum = diffSum;
+                bestFit = blockMapping;
+            }
+        }
+
+        return bestFit;
+    }
+
+    private static double calculateDiffSumPerBlock(BlockMapping blockMapping, PixelColor[][] image)
+    {
+        double diffSum = 0;
+        Integer[][] mapping = blockMapping.getMapping();
+        List<PixelColor> subpalette = blockMapping.getSubpalette();
+
+        int x = blockMapping.getRow() * BLOCK_SIZE;
+        int y = blockMapping.getColumn() * BLOCK_SIZE;
+
+        for (int i = 0; i < BLOCK_SIZE; i++)
+            for (int j = 0; j < BLOCK_SIZE; j++)
+            {
+                diffSum += computeColorDiffSquared(image[x + i][y + j], subpalette.get(mapping[i][j]));
+            }
+
+        return diffSum;
     }
 }

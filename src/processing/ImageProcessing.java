@@ -115,9 +115,7 @@ public class ImageProcessing
 
         for (List<BlockMapping> cluster : clusteredBlockMappingList)
         {
-
-            // TODO: implement best fit from cluster
-            BlockMapping bestFit = cluster.get((int) (Math.random() * cluster.size()));
+            BlockMapping bestFit = ColorMathUtils.bestFitMapping(cluster, image);
 
             for (BlockMapping blockMapping : cluster)
             {
