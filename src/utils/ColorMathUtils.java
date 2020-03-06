@@ -4,8 +4,6 @@ import model.BlockConfig;
 import model.PixelColor;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static model.Constants.*;
 
@@ -134,44 +132,42 @@ public class ColorMathUtils
         return diffSum / pixelCount;
     }
 
-    public static BlockConfig bestFitMapping(List<BlockConfig> cluster, PixelColor[][] image)
+    public static Integer[][] bestFitMapping(List<BlockConfig> cluster, PixelColor[][] image)
     {
-        //noinspection OptionalGetWithoutIsPresent
-        List<PixelColor> bestSubpalette = cluster.stream().map(BlockConfig::getSubpalette)
-                                                 .collect(Collectors.groupingBy(w -> w, Collectors.counting()))
-                                                 .entrySet()
-                                                 .stream()
-                                                 .max(Map.Entry.comparingByValue())
-                                                 .get()
-                                                 .getKey();
 
 
-        BlockConfig first = cluster.get(0);
-        BlockConfig bestFit = new BlockConfig(first.getRow(),
-                                              first.getColumn(),
-                                              first.getMapping(),
-                                              bestSubpalette);
-        double minDiffSum = calculateDiffSumPerBlock(bestFit, image);
+        Integer[][] bestFitMapping = null;
+        double minAvgDiffSum = -1;
 
-        for (BlockConfig blockConfig : cluster)
+        for (BlockConfig config1 : cluster)
         {
-            BlockConfig tempBlockConfig = new BlockConfig(blockConfig.getRow(),
-                                                          blockConfig.getColumn(),
-                                                          blockConfig.getMapping(),
-                                                          bestSubpalette);
-            double diffSum = calculateDiffSumPerBlock(tempBlockConfig, image);
+            double avgDiffSum = 0;
 
-            if (diffSum < minDiffSum)
+            for (BlockConfig config2 : cluster)
             {
-                minDiffSum = diffSum;
-                bestFit = tempBlockConfig;
+                Integer row = config2.getRow();
+                Integer column = config2.getColumn();
+                List<PixelColor> subpalette = config2.getSubpalette();
+
+                Integer[][] mapping = config1.getMapping();
+
+                BlockConfig temp = new BlockConfig(row, column, mapping, subpalette);
+
+                avgDiffSum +=  calculateBlockDiffSum(temp, image);
+            }
+            avgDiffSum /= cluster.size();
+
+            if(minAvgDiffSum == -1 || minAvgDiffSum > avgDiffSum)
+            {
+                bestFitMapping = config1.getMapping();
+                minAvgDiffSum = avgDiffSum;
             }
         }
 
-        return bestFit;
+        return bestFitMapping;
     }
 
-    private static double calculateDiffSumPerBlock(BlockConfig blockConfig, PixelColor[][] image)
+    private static double calculateBlockDiffSum(BlockConfig blockConfig, PixelColor[][] image)
     {
         double diffSum = 0;
         Integer[][] mapping = blockConfig.getMapping();

@@ -115,7 +115,7 @@ public class ImageProcessing
 
         for (List<BlockConfig> cluster : clusteredBlockConfigList)
         {
-            BlockConfig bestFit = ColorMathUtils.bestFitMapping(cluster, image);
+            Integer[][] bestFitMapping = ColorMathUtils.bestFitMapping(cluster, image);
 
             for (BlockConfig blockConfig : cluster)
             {
@@ -123,9 +123,8 @@ public class ImageProcessing
                 Integer row = blockConfig.getRow();
                 Integer column = blockConfig.getColumn();
 
-                Integer[][] mapping = bestFit.getMapping();
 
-                compressedBlockConfigList.add(new BlockConfig(row, column, mapping, subpalette));
+                compressedBlockConfigList.add(new BlockConfig(row, column, bestFitMapping, subpalette));
             }
         }
 
