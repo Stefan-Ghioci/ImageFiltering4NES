@@ -1,5 +1,7 @@
 import ai.KMeansClusteringAlgorithm;
-import ai.impl.BlockConfigClusteringAlgorithm;
+import ai.impl.BlockConfigAlgorithm;
+import ai.impl.SubpaletteAlgorithm;
+import ai.impl.SubpaletteConfig;
 import model.BlockConfig;
 import model.PixelColor;
 import org.slf4j.Logger;
@@ -25,7 +27,7 @@ public class Compress
 
         List<BlockConfig> blockConfigList = ImageUtils.loadGeneratedBlockConfigs(textFile, image);
 
-        KMeansClusteringAlgorithm<BlockConfig> algorithm = new BlockConfigClusteringAlgorithm();
+        KMeansClusteringAlgorithm<BlockConfig> algorithm = new BlockConfigAlgorithm();
 
         List<List<BlockConfig>> clusteredBlockConfigList = algorithm.run(blockConfigList, iterationCount);
 

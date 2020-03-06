@@ -2,6 +2,7 @@ package utils;
 
 import model.BlockConfig;
 import model.PixelColor;
+import org.apache.commons.io.FilenameUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -78,7 +79,7 @@ public class ImageUtils
         return image;
     }
 
-    public static void saveFile(PixelColor[][] image, String filename)
+    public static File saveFile(PixelColor[][] image, String filename)
     {
         BufferedImage bufferedImage = new BufferedImage(STD_WIDTH, STD_HEIGHT, BufferedImage.TYPE_INT_RGB);
 
@@ -97,13 +98,16 @@ public class ImageUtils
         {
             e.printStackTrace();
         }
+        return outputFile;
     }
 
     public static void writeSubpaletteMappingToFile(List<List<PixelColor>> subpaletteList,
                                                     List<Integer> subpaletteMapping,
-                                                    String filename)
+                                                    File file)
     {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("generated/" + filename + ".txt")))
+        String fileName = "generated/" + FilenameUtils.removeExtension(file.getName()) + ".txt";
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName)))
         {
             for (List<PixelColor> pixelColors : subpaletteList)
                 for (PixelColor pixelColor : pixelColors)

@@ -8,10 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static java.lang.Math.abs;
 import static model.Constants.BLOCK_SIZE;
 
-public class BlockConfigClusteringAlgorithm extends KMeansClusteringAlgorithm<BlockConfig>
+public class BlockConfigAlgorithm extends KMeansClusteringAlgorithm<BlockConfig>
 {
 
     @Override
@@ -58,9 +57,9 @@ public class BlockConfigClusteringAlgorithm extends KMeansClusteringAlgorithm<Bl
         for (int x = 0; x < BLOCK_SIZE; x++)
             for (int y = 0; y < BLOCK_SIZE; y++)
             {
-//                if (!mapping[x][y].equals(centroidMapping[x][y]))
-//                    distance++;
-                distance += abs(mapping[x][y] - centroidMapping[x][y]);
+                if (!mapping[x][y].equals(centroidMapping[x][y]))
+                    distance++;
+//                distance += (mapping[x][y] - centroidMapping[x][y]) * (mapping[x][y] - centroidMapping[x][y]);
             }
 
         return distance;

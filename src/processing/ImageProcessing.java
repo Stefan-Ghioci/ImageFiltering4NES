@@ -77,7 +77,7 @@ public class ImageProcessing
                     ColorMathUtils.dither(image, x, y, oldPixel, newPixel);
                 }
         }
-        saveFile(image, filename + (dither ? "_dithered" : "_raw"));
+        saveFile(image, filename);
 
         return image;
     }
@@ -104,8 +104,8 @@ public class ImageProcessing
                         image[x + i][y + j] = bestMatch;
                     }
             }
-        saveFile(image, filename);
-        writeSubpaletteMappingToFile(subpaletteList, subpaletteMapping, filename);
+
+        writeSubpaletteMappingToFile(subpaletteList, subpaletteMapping, saveFile(image, filename));
     }
 
     public static List<BlockConfig> compress(List<List<BlockConfig>> clusteredBlockConfigList,

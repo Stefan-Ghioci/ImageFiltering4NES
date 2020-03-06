@@ -4,6 +4,8 @@ import model.BlockConfig;
 import model.PixelColor;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static model.Constants.*;
 
@@ -134,17 +136,35 @@ public class ColorMathUtils
 
     public static BlockConfig bestFitMapping(List<BlockConfig> cluster, PixelColor[][] image)
     {
-        double minDiffSum = calculateDiffSumPerBlock(cluster.get(0), image);
-        BlockConfig bestFit = cluster.get(0);
+        //noinspection OptionalGetWithoutIsPresent
+        List<PixelColor> bestSubpalette = cluster.stream().map(BlockConfig::getSubpalette)
+                                                 .collect(Collectors.groupingBy(w -> w, Collectors.counting()))
+                                                 .entrySet()
+                                                 .stream()
+                                                 .max(Map.Entry.comparingByValue())
+                                                 .get()
+                                                 .getKey();
+
+
+        BlockConfig first = cluster.get(0);
+        BlockConfig bestFit = new BlockConfig(first.getRow(),
+                                              first.getColumn(),
+                                              first.getMapping(),
+                                              bestSubpalette);
+        double minDiffSum = calculateDiffSumPerBlock(bestFit, image);
 
         for (BlockConfig blockConfig : cluster)
         {
-            double diffSum = calculateDiffSumPerBlock(blockConfig, image);
+            BlockConfig tempBlockConfig = new BlockConfig(blockConfig.getRow(),
+                                                          blockConfig.getColumn(),
+                                                          blockConfig.getMapping(),
+                                                          bestSubpalette);
+            double diffSum = calculateDiffSumPerBlock(tempBlockConfig, image);
 
             if (diffSum < minDiffSum)
             {
                 minDiffSum = diffSum;
-                bestFit = blockConfig;
+                bestFit = tempBlockConfig;
             }
         }
 

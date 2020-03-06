@@ -1,9 +1,9 @@
 import ai.impl.SubpaletteAlgorithm;
 import ai.impl.SubpaletteConfig;
+import model.PixelColor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import processing.ImageProcessing;
-import model.PixelColor;
 import utils.ImageUtils;
 
 import java.util.List;
@@ -24,12 +24,23 @@ public class Reconstruct
         List<PixelColor> nesPalette = ImageUtils.loadNESPalette();
         List<PixelColor> bestPalette = ImageProcessing.computeBestPalette(originalImage, nesPalette);
 
-        PixelColor[][] nesRawImage = ImageProcessing.redraw(originalImage, nesPalette, filename + "_nes", false);
-        PixelColor[][] nesDitheredImage = ImageProcessing.redraw(originalImage, nesPalette, filename + "_nes", true);
+        PixelColor[][] nesRawImage = ImageProcessing.redraw(originalImage,
+                                                            nesPalette,
+                                                            "generated/" + filename + "_nes_raw.bmp",
+                                                            false);
+        PixelColor[][] nesDitheredImage = ImageProcessing.redraw(originalImage,
+                                                                 nesPalette,
+                                                                 "generated/" + filename + "_nes_dithered.bmp",
+                                                                 true);
 
-
-        PixelColor[][] bestRawImage = ImageProcessing.redraw(originalImage, bestPalette, filename + "_best", false);
-        PixelColor[][] bestDitheredImage = ImageProcessing.redraw(originalImage, bestPalette, filename + "_best", true);
+        PixelColor[][] bestRawImage = ImageProcessing.redraw(originalImage,
+                                                             bestPalette,
+                                                             "generated/" + filename + "_best_raw.bmp",
+                                                             false);
+        PixelColor[][] bestDitheredImage = ImageProcessing.redraw(originalImage,
+                                                                  bestPalette,
+                                                                  "generated/" + filename + "_best_dithered.bmp",
+                                                                  true);
 
         {
             LOGGER.info("Reconstruction using best palette on nes raw image");
@@ -48,7 +59,9 @@ public class Reconstruct
             SubpaletteConfig bestConfig = algorithm.run(populationSize, stagnationFactor, mutationChance);
             List<List<PixelColor>> subpalettes = bestConfig.getSolution();
 
-            String resultFilename = "generated/" + filename + "_ai_nes_dithered_" + (int) bestConfig.getFitness() + ".bmp";
+            String
+                    resultFilename =
+                    "generated/" + filename + "_ai_nes_dithered_" + (int) bestConfig.getFitness() + ".bmp";
             ImageProcessing.reconstruct(nesDitheredImage, subpalettes, resultFilename);
         }
         {
@@ -68,7 +81,9 @@ public class Reconstruct
             SubpaletteConfig bestConfig = algorithm.run(populationSize, stagnationFactor, mutationChance);
             List<List<PixelColor>> subpalettes = bestConfig.getSolution();
 
-            String resultFilename = "generated/" + filename + "_ai_best_dithered_" + (int) bestConfig.getFitness() + ".bmp";
+            String
+                    resultFilename =
+                    "generated/" + filename + "_ai_best_dithered_" + (int) bestConfig.getFitness() + ".bmp";
             ImageProcessing.reconstruct(bestDitheredImage, subpalettes, resultFilename);
         }
     }

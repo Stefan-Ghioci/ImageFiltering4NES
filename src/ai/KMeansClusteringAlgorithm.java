@@ -13,7 +13,8 @@ import static model.Constants.CLUSTER_COUNT;
 
 public abstract class KMeansClusteringAlgorithm<Entity>
 {
-    final static Logger LOGGER = LoggerFactory.getLogger(KMeansClusteringAlgorithm.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(KMeansClusteringAlgorithm.class);
+    private final static int CONVERGENCE_THRESHOLD = 100;
 
     public List<List<Entity>> run(List<Entity> entities, int iterationCount)
     {
@@ -57,13 +58,12 @@ public abstract class KMeansClusteringAlgorithm<Entity>
                 }
 
                 List<Entity> newCentroids = new ArrayList<>();
-                int reCentered = 0;
+//                int reCentered = 0;
 
 //            LOGGER.info("Averaging centroids for clustered entities...");
 
                 for (Map.Entry<Entity, List<Entity>> entry : clusterMap.entrySet())
                 {
-
                     Entity centroid = entry.getKey();
                     List<Entity> cluster = entry.getValue();
 
@@ -74,7 +74,7 @@ public abstract class KMeansClusteringAlgorithm<Entity>
                         if (calculateDistance(newCentroid, centroid) > 0)
                         {
                             anyClusterModified = true;
-                            reCentered++;
+//                            reCentered++;
                         }
                         newCentroids.add(newCentroid);
                     }
@@ -88,11 +88,14 @@ public abstract class KMeansClusteringAlgorithm<Entity>
                     loopCounter++;
                     clusterMap = initializeClusterMap(newCentroids);
                 }
-
             }
-            while (anyClusterModified);
+            while (anyClusterModified && loopCounter < CONVERGENCE_THRESHOLD);
 
-
+            if (loopCounter >= CONVERGENCE_THRESHOLD)
+            {
+                LOGGER.info("Could not converge centroids on iteration {} :(", i);
+                continue;
+            }
             List<List<Entity>> clusteredEntitiesList = new ArrayList<>(clusterMap.values());
 
             double variance = computeVariance(clusteredEntitiesList);
@@ -129,14 +132,18 @@ public abstract class KMeansClusteringAlgorithm<Entity>
     private Map<Entity, List<Entity>> initializeClusterMap(List<Entity> centroids)
     {
         return centroids.stream()
-                        .collect(Collectors.toMap(centroid -> centroid, centroid -> new ArrayList<>(), (a, b) -> b));
+                        .collect(Collectors.toMap(centroid -> centroid,
+                                                  centroid -> new ArrayList<>(),
+                                                  (a, b) -> b));
     }
 
     private Map<Entity, List<Entity>> generateClusterMap()
     {
         return IntStream.range(0, CLUSTER_COUNT)
                         .boxed()
-                        .collect(Collectors.toMap(i -> generateCentroid(), i -> new ArrayList<>(), (a, b) -> b));
+                        .collect(Collectors.toMap(i -> generateCentroid(),
+                                                  i -> new ArrayList<>(),
+                                                  (a, b) -> b));
     }
 
     protected abstract Entity center(List<Entity> cluster);

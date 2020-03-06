@@ -14,7 +14,7 @@ public abstract class EvolutionaryAlgorithm
 
     public Individual run(int populationSize, int stagnationFactor, double mutationChance)
     {
-        LOGGER.info("Running evolutionary algorithm with {} individuals with {} stagnation factor",
+        LOGGER.info("Running evolutionary algorithm with {} individuals and {} stagnation factor",
                     populationSize,
                     stagnationFactor);
 
