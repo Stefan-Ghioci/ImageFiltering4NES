@@ -11,9 +11,9 @@ import java.util.stream.IntStream;
 
 import static model.Constants.CLUSTER_COUNT;
 
-public abstract class KMeansClustering<Entity>
+public abstract class KMeansClusteringAlgorithm<Entity>
 {
-    final static Logger LOGGER = LoggerFactory.getLogger(KMeansClustering.class);
+    final static Logger LOGGER = LoggerFactory.getLogger(KMeansClusteringAlgorithm.class);
 
     public List<List<Entity>> run(List<Entity> entities, int iterationCount)
     {
@@ -100,11 +100,12 @@ public abstract class KMeansClustering<Entity>
             {
                 minVariance = variance;
                 bestClusteredEntitiesList = clusteredEntitiesList;
+
+                LOGGER.info("Centroids converged after {} re-centerings on iteration {}, new best variance {}",
+                            loopCounter,
+                            i,
+                            (int) variance);
             }
-            LOGGER.info("Centroids converged after {} re-centerings on iteration {}, variance {}",
-                        loopCounter,
-                        i,
-                        (int) variance);
         }
 
         assert bestClusteredEntitiesList != null;

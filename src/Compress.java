@@ -1,7 +1,9 @@
-import ai.KMeansClustering;
-import ai.impl.BlockMappingClustering;
-import model.BlockMapping;
+import ai.KMeansClusteringAlgorithm;
+import ai.impl.BlockConfigClusteringAlgorithm;
+import model.BlockConfig;
 import model.PixelColor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import processing.ImageProcessing;
 import utils.ColorMathUtils;
 import utils.ImageUtils;
@@ -11,6 +13,8 @@ import java.util.List;
 
 public class Compress
 {
+    private final static Logger LOGGER = LoggerFactory.getLogger(Compress.class);
+
     public static void main(String[] args)
     {
         String filename = args[0];
@@ -19,16 +23,18 @@ public class Compress
         File textFile = new File("generated/" + filename + ".txt");
         PixelColor[][] image = ImageUtils.loadFile("generated/" + filename + ".bmp");
 
-        List<BlockMapping> blockMappingList = ImageUtils.loadGeneratedBlockMappings(textFile, image);
+        List<BlockConfig> blockConfigList = ImageUtils.loadGeneratedBlockConfigs(textFile, image);
 
+        KMeansClusteringAlgorithm<BlockConfig> algorithm = new BlockConfigClusteringAlgorithm();
 
-        KMeansClustering<BlockMapping> algorithm = new BlockMappingClustering();
+        List<List<BlockConfig>> clusteredBlockConfigList = algorithm.run(blockConfigList, iterationCount);
 
-        List<List<BlockMapping>> clusteredBlockMappingList = algorithm.run(blockMappingList, iterationCount);
-        List<BlockMapping> compressedBlockMappingList = ImageProcessing.compress(clusteredBlockMappingList, image);
-        PixelColor[][] compressedImage = ImageUtils.convertBlockMappingsToPixelArray(compressedBlockMappingList);
+        List<BlockConfig> compressedBlockConfigList = ImageProcessing.compress(clusteredBlockConfigList, image);
+        PixelColor[][] compressedImage = ImageUtils.convertBlockConfigsToPixelArray(compressedBlockConfigList);
 
         double avgDiff = ColorMathUtils.calculateAvgDiff(compressedImage, image);
+
+        LOGGER.info("Compression finished on {} with avg diff {}", filename, (int) avgDiff);
 
         ImageUtils.saveFile(compressedImage, "solution/" + filename + "_compressed_" + (int) avgDiff + ".bmp");
     }

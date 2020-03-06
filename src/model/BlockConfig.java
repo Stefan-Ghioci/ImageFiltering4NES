@@ -2,14 +2,14 @@ package model;
 
 import java.util.List;
 
-public class BlockMapping
+public class BlockConfig
 {
     Integer row;
     Integer column;
     Integer[][] mapping;
     List<PixelColor> subpalette;
 
-    public BlockMapping(Integer row, Integer column, Integer[][] mapping, List<PixelColor> subpalette)
+    public BlockConfig(Integer row, Integer column, Integer[][] mapping, List<PixelColor> subpalette)
     {
         this.row = row;
         this.column = column;

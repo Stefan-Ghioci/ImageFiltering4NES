@@ -1,6 +1,6 @@
 package utils;
 
-import model.BlockMapping;
+import model.BlockConfig;
 import model.PixelColor;
 
 import java.util.List;
@@ -132,33 +132,33 @@ public class ColorMathUtils
         return diffSum / pixelCount;
     }
 
-    public static BlockMapping bestFitMapping(List<BlockMapping> cluster, PixelColor[][] image)
+    public static BlockConfig bestFitMapping(List<BlockConfig> cluster, PixelColor[][] image)
     {
         double minDiffSum = calculateDiffSumPerBlock(cluster.get(0), image);
-        BlockMapping bestFit = cluster.get(0);
+        BlockConfig bestFit = cluster.get(0);
 
-        for (BlockMapping blockMapping : cluster)
+        for (BlockConfig blockConfig : cluster)
         {
-            double diffSum = calculateDiffSumPerBlock(blockMapping, image);
+            double diffSum = calculateDiffSumPerBlock(blockConfig, image);
 
             if (diffSum < minDiffSum)
             {
                 minDiffSum = diffSum;
-                bestFit = blockMapping;
+                bestFit = blockConfig;
             }
         }
 
         return bestFit;
     }
 
-    private static double calculateDiffSumPerBlock(BlockMapping blockMapping, PixelColor[][] image)
+    private static double calculateDiffSumPerBlock(BlockConfig blockConfig, PixelColor[][] image)
     {
         double diffSum = 0;
-        Integer[][] mapping = blockMapping.getMapping();
-        List<PixelColor> subpalette = blockMapping.getSubpalette();
+        Integer[][] mapping = blockConfig.getMapping();
+        List<PixelColor> subpalette = blockConfig.getSubpalette();
 
-        int x = blockMapping.getRow() * BLOCK_SIZE;
-        int y = blockMapping.getColumn() * BLOCK_SIZE;
+        int x = blockConfig.getRow() * BLOCK_SIZE;
+        int y = blockConfig.getColumn() * BLOCK_SIZE;
 
         for (int i = 0; i < BLOCK_SIZE; i++)
             for (int j = 0; j < BLOCK_SIZE; j++)

@@ -1,6 +1,6 @@
 package processing;
 
-import model.BlockMapping;
+import model.BlockConfig;
 import model.PixelColor;
 import utils.ColorMathUtils;
 
@@ -108,28 +108,28 @@ public class ImageProcessing
         writeSubpaletteMappingToFile(subpaletteList, subpaletteMapping, filename);
     }
 
-    public static List<BlockMapping> compress(List<List<BlockMapping>> clusteredBlockMappingList,
-                                              PixelColor[][] image)
+    public static List<BlockConfig> compress(List<List<BlockConfig>> clusteredBlockConfigList,
+                                             PixelColor[][] image)
     {
-        List<BlockMapping> compressedBlockMappingList = new ArrayList<>();
+        List<BlockConfig> compressedBlockConfigList = new ArrayList<>();
 
-        for (List<BlockMapping> cluster : clusteredBlockMappingList)
+        for (List<BlockConfig> cluster : clusteredBlockConfigList)
         {
-            BlockMapping bestFit = ColorMathUtils.bestFitMapping(cluster, image);
+            BlockConfig bestFit = ColorMathUtils.bestFitMapping(cluster, image);
 
-            for (BlockMapping blockMapping : cluster)
+            for (BlockConfig blockConfig : cluster)
             {
-                List<PixelColor> subpalette = blockMapping.getSubpalette();
-                Integer row = blockMapping.getRow();
-                Integer column = blockMapping.getColumn();
+                List<PixelColor> subpalette = blockConfig.getSubpalette();
+                Integer row = blockConfig.getRow();
+                Integer column = blockConfig.getColumn();
 
                 Integer[][] mapping = bestFit.getMapping();
 
-                compressedBlockMappingList.add(new BlockMapping(row, column, mapping, subpalette));
+                compressedBlockConfigList.add(new BlockConfig(row, column, mapping, subpalette));
             }
         }
 
-        return compressedBlockMappingList;
+        return compressedBlockConfigList;
     }
 
 }

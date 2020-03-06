@@ -1,6 +1,6 @@
 package utils;
 
-import model.BlockMapping;
+import model.BlockConfig;
 import model.PixelColor;
 
 import javax.imageio.ImageIO;
@@ -57,16 +57,16 @@ public class ImageUtils
         return image;
     }
 
-    public static PixelColor[][] convertBlockMappingsToPixelArray(List<BlockMapping> blockMappingList)
+    public static PixelColor[][] convertBlockConfigsToPixelArray(List<BlockConfig> blockConfigList)
     {
         PixelColor[][] image = new PixelColor[STD_WIDTH][STD_HEIGHT];
 
-        for (BlockMapping blockMapping : blockMappingList)
+        for (BlockConfig blockConfig : blockConfigList)
         {
-            int x = blockMapping.getRow() * BLOCK_SIZE;
-            int y = blockMapping.getColumn() * BLOCK_SIZE;
-            Integer[][] mapping = blockMapping.getMapping();
-            List<PixelColor> subpalette = blockMapping.getSubpalette();
+            int x = blockConfig.getRow() * BLOCK_SIZE;
+            int y = blockConfig.getColumn() * BLOCK_SIZE;
+            Integer[][] mapping = blockConfig.getMapping();
+            List<PixelColor> subpalette = blockConfig.getSubpalette();
 
             for (int i = 0; i < BLOCK_SIZE; i++)
                 for (int j = 0; j < BLOCK_SIZE; j++)
@@ -131,9 +131,9 @@ public class ImageUtils
         }
     }
 
-    public static List<BlockMapping> loadGeneratedBlockMappings(File textFile, PixelColor[][] image)
+    public static List<BlockConfig> loadGeneratedBlockConfigs(File textFile, PixelColor[][] image)
     {
-        List<BlockMapping> blockMappingList = new ArrayList<>();
+        List<BlockConfig> blockConfigList = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(textFile)))
         {
@@ -182,7 +182,7 @@ public class ImageUtils
                             mapping[i][j] =
                                     subpalette.indexOf(image[x + i][y + j]);
 
-                    blockMappingList.add(new BlockMapping(row, column, mapping, subpalette));
+                    blockConfigList.add(new BlockConfig(row, column, mapping, subpalette));
                 }
 
         }
@@ -190,6 +190,6 @@ public class ImageUtils
         {
             e.printStackTrace();
         }
-        return blockMappingList;
+        return blockConfigList;
     }
 }
