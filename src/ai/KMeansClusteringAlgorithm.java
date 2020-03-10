@@ -26,7 +26,7 @@ public abstract class KMeansClusteringAlgorithm<Entity>
 
         boolean anyClusterModified;
         List<List<Entity>> bestClusteredEntitiesList = null;
-        double minVariance = -1;
+        double minCost = -1;
 
         for (int i = 0; i < iterationCount; i++)
         {
@@ -98,17 +98,22 @@ public abstract class KMeansClusteringAlgorithm<Entity>
             }
             List<List<Entity>> clusteredEntitiesList = new ArrayList<>(clusterMap.values());
 
-            double variance = computeVariance(clusteredEntitiesList);
-            if (minVariance == -1 || minVariance > variance)
+            double cost = computeCost(clusteredEntitiesList);
+            if (minCost == -1 || minCost > cost)
             {
-                minVariance = variance;
+                minCost = cost;
                 bestClusteredEntitiesList = clusteredEntitiesList;
 
-                LOGGER.info("Centroids converged after {} re-centerings on iteration {}, new best variance {}",
+                LOGGER.info("Centroids converged after {} re-centerings on iteration {}, new best fitness {}",
                             loopCounter,
                             i,
-                            (int) variance);
+                            (int) cost);
             }
+            else
+                LOGGER.info("Centroids converged after {} re-centerings on iteration {}, fitness {}",
+                            loopCounter,
+                            i,
+                            (int) cost);
         }
 
         assert bestClusteredEntitiesList != null;
@@ -117,17 +122,7 @@ public abstract class KMeansClusteringAlgorithm<Entity>
                                         .collect(Collectors.toList());
     }
 
-    private double computeVariance(List<List<Entity>> clusteredEntitiesList)
-    {
-        double mean = clusteredEntitiesList.stream()
-                                           .mapToDouble(List::size)
-                                           .sum() / CLUSTER_COUNT;
-
-        return clusteredEntitiesList.stream()
-                                    .mapToDouble(cluster -> Math.pow(cluster.size() - mean, 2))
-                                    .sum() / CLUSTER_COUNT;
-    }
-
+    protected abstract double computeCost(List<List<Entity>> clusteredEntitiesList);
 
     private Map<Entity, List<Entity>> initializeClusterMap(List<Entity> centroids)
     {

@@ -3,12 +3,15 @@ package utils;
 import model.BlockConfig;
 import model.PixelColor;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import static java.lang.Math.*;
 import static model.Constants.*;
 
 public class ColorMathUtils
 {
+
     public static PixelColor bestMatch(PixelColor color, List<PixelColor> palette)
     {
         PixelColor min_diff_color = palette.get(0);
@@ -153,11 +156,11 @@ public class ColorMathUtils
 
                 BlockConfig temp = new BlockConfig(row, column, mapping, subpalette);
 
-                avgDiffSum +=  calculateBlockDiffSum(temp, image);
+                avgDiffSum += calculateBlockDiffSum(temp, image);
             }
             avgDiffSum /= cluster.size();
 
-            if(minAvgDiffSum == -1 || minAvgDiffSum > avgDiffSum)
+            if (minAvgDiffSum == -1 || minAvgDiffSum > avgDiffSum)
             {
                 bestFitMapping = config1.getMapping();
                 minAvgDiffSum = avgDiffSum;
@@ -183,5 +186,102 @@ public class ColorMathUtils
             }
 
         return diffSum;
+    }
+
+    public static double norm(Integer[][] matrix)
+    {
+
+        return sqrt(Arrays.stream(matrix)
+                          .mapToDouble(row -> Arrays.stream(row)
+                                                    .mapToDouble(integer -> pow(integer, 2))
+                                                    .sum())
+                          .sum());
+    }
+
+    public static double meanSquaredError(Integer[][] matrix1, Integer[][] matrix2)
+    {
+        double result = 0.0;
+        int X = matrix1.length;
+        int Y = matrix1[0].length;
+
+        for (int x = 0; x < X; x++)
+            for (int y = 0; y < Y; y++)
+            {
+                result += pow(matrix1[x][y] - matrix2[x][y], 2);
+            }
+
+        return result / (X * Y);
+    }
+
+    public static double structuralSimilarity(Integer[][] mapping1, Integer[][] mapping2)
+    {
+        double variance1 = calculateMappingVariance(mapping1);
+        double variance2 = calculateMappingVariance(mapping2);
+        double covariance = calculateMappingCovariance(mapping1, mapping2);
+        return covariance / (variance1 * variance2);
+    }
+
+    private static double calculateMappingCovariance(Integer[][] mapping1, Integer[][] mapping2)
+    {
+        double mean1 = mean(mapping1);
+        double mean2 = mean(mapping2);
+
+        double diffProdSum = 0;
+
+        for (int x = 0; x < BLOCK_SIZE; x++)
+            for (int y = 0; y < BLOCK_SIZE; y++)
+                diffProdSum += (mapping1[x][y] - mean1) * (mapping2[x][y] - mean2);
+
+        return abs(diffProdSum / (BLOCK_SIZE * BLOCK_SIZE));
+    }
+
+    private static double mean(Integer[][] mapping)
+    {
+        int sum = 0;
+
+        for (int x = 0; x < BLOCK_SIZE; x++)
+            for (int y = 0; y < BLOCK_SIZE; y++)
+                sum += mapping[x][y];
+
+        return (double) sum / (BLOCK_SIZE * BLOCK_SIZE);
+    }
+
+    private static double calculateMappingVariance(Integer[][] mapping)
+    {
+        double mean = mean(mapping);
+
+        double squaredDiffSum = 0;
+
+        for (int x = 0; x < BLOCK_SIZE; x++)
+            for (int y = 0; y < BLOCK_SIZE; y++)
+                squaredDiffSum += pow(mapping[x][y] - mean, 2);
+
+        return squaredDiffSum / (BLOCK_SIZE * BLOCK_SIZE);
+    }
+
+    public static Set<List<Integer>> generatePermutations(int[] numbers)
+    {
+        Set<List<Integer>> permutations = new HashSet<>();
+
+        int maxSize = factorial(numbers.length);
+
+        while (permutations.size() < maxSize)
+        {
+            List<Integer> list = Arrays.stream(numbers)
+                                       .boxed()
+                                       .collect(Collectors.toList());
+            Collections.shuffle(list);
+
+            permutations.add(list);
+        }
+        return permutations;
+    }
+
+    private static int factorial(int number)
+    {
+        if (number == 1 || number == 0)
+            return 1;
+        else
+            return factorial(number - 1) * number;
     }
 }

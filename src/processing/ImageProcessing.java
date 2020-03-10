@@ -131,4 +131,44 @@ public class ImageProcessing
         return compressedBlockConfigList;
     }
 
+    public static List<List<BlockConfig>> clusterByDivision(List<BlockConfig> blockConfigList)
+    {
+
+
+        Map<List<Integer>, List<BlockConfig>> clusterMap =
+                ColorMathUtils.generatePermutations(new int[]{0, 1, 2, 3})
+                              .stream()
+                              .collect(Collectors.toMap(permutation -> permutation,
+                                                        permutation -> new ArrayList<>(),
+                                                        (a, b) -> b));
+
+        blockConfigList.forEach(blockConfig -> clusterMap.get(getMappingFrequency(blockConfig.getMapping()))
+                                                         .add(blockConfig));
+
+        return clusterMap.values()
+                         .stream()
+                         .filter(cluster -> !cluster.isEmpty())
+                         .collect(Collectors.toList());
+    }
+
+    private static List<Integer> getMappingFrequency(Integer[][] mapping)
+    {
+        Map<Integer, Integer> frequencyMap = IntStream.range(0, 4)
+                                                      .boxed()
+                                                      .collect(Collectors.toMap(i -> i,
+                                                                                i -> 0,
+                                                                                (a, b) -> b));
+
+        for (int y = 0; y < BLOCK_SIZE; y++)
+            for (int x = 0; x < BLOCK_SIZE; x++)
+                frequencyMap.put(mapping[x][y], frequencyMap.get(mapping[x][y]) + 1);
+
+        return frequencyMap.entrySet()
+                           .stream()
+                           .sorted(Comparator.comparingInt((ToIntFunction<Map.Entry<Integer, Integer>>) Map.Entry::getValue)
+                                             .reversed())
+                           .map(Map.Entry::getKey)
+                           .collect(Collectors.toList());
+    }
+
 }
