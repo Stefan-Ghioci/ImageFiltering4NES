@@ -13,6 +13,7 @@ solution/
 
 # Generated files
 .idea/**/contentModel.xml
+.idea/sonarlint/
 
 # Sensitive or high-churn files
 .idea/**/dataSources/

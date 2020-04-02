@@ -4,32 +4,38 @@ import model.BlockConfig;
 import model.PixelColor;
 
 import java.util.*;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-import static java.lang.Math.*;
+import static java.lang.Math.pow;
 import static model.Constants.*;
 
 public class ColorMathUtils
 {
+    private ColorMathUtils()
+    {
+        throw new IllegalStateException("Utility class");
+    }
 
     public static PixelColor bestMatch(PixelColor color, List<PixelColor> palette)
     {
-        PixelColor min_diff_color = palette.get(0);
-        double min_diff = computeColorDiffSquared(color, palette.get(0));
+        PixelColor minDiffColor = palette.get(0);
+        double minDiff = computeColorDiffSquared(color, palette.get(0));
 
         for (PixelColor paletteColor : palette)
         {
             double diff = computeColorDiffSquared(color, paletteColor);
-            if (diff < min_diff)
+            if (diff < minDiff)
             {
-                min_diff = diff;
-                min_diff_color = paletteColor;
+                minDiff = diff;
+                minDiffColor = paletteColor;
             }
         }
-        return min_diff_color;
+        return minDiffColor;
     }
 
-    public static double computeColorDiffSquared(PixelColor color1, PixelColor color2)
+    public static int computeColorDiffSquared(PixelColor color1, PixelColor color2)
     {
         int r1 = color1.getRed();
         int g1 = color1.getGreen();
@@ -57,6 +63,7 @@ public class ColorMathUtils
         }
         catch (ArrayIndexOutOfBoundsException ignored)
         {
+            // out of image boundary, continue
         }
     }
 
@@ -125,7 +132,7 @@ public class ColorMathUtils
 
     public static double calculateAvgDiff(PixelColor[][] image1, PixelColor[][] image2)
     {
-        double pixelCount = STD_WIDTH * STD_HEIGHT;
+        int pixelCount = STD_WIDTH * STD_HEIGHT;
         double diffSum = 0;
 
         for (int x = 0; x < STD_WIDTH; x++)
@@ -188,76 +195,6 @@ public class ColorMathUtils
         return diffSum;
     }
 
-    public static double norm(Integer[][] matrix)
-    {
-
-        return sqrt(Arrays.stream(matrix)
-                          .mapToDouble(row -> Arrays.stream(row)
-                                                    .mapToDouble(integer -> pow(integer, 2))
-                                                    .sum())
-                          .sum());
-    }
-
-    public static double meanSquaredError(Integer[][] matrix1, Integer[][] matrix2)
-    {
-        double result = 0.0;
-        int X = matrix1.length;
-        int Y = matrix1[0].length;
-
-        for (int x = 0; x < X; x++)
-            for (int y = 0; y < Y; y++)
-            {
-                result += pow(matrix1[x][y] - matrix2[x][y], 2);
-            }
-
-        return result / (X * Y);
-    }
-
-    public static double structuralSimilarity(Integer[][] mapping1, Integer[][] mapping2)
-    {
-        double variance1 = calculateMappingVariance(mapping1);
-        double variance2 = calculateMappingVariance(mapping2);
-        double covariance = calculateMappingCovariance(mapping1, mapping2);
-        return covariance / (variance1 * variance2);
-    }
-
-    private static double calculateMappingCovariance(Integer[][] mapping1, Integer[][] mapping2)
-    {
-        double mean1 = mean(mapping1);
-        double mean2 = mean(mapping2);
-
-        double diffProdSum = 0;
-
-        for (int x = 0; x < BLOCK_SIZE; x++)
-            for (int y = 0; y < BLOCK_SIZE; y++)
-                diffProdSum += (mapping1[x][y] - mean1) * (mapping2[x][y] - mean2);
-
-        return abs(diffProdSum / (BLOCK_SIZE * BLOCK_SIZE));
-    }
-
-    private static double mean(Integer[][] mapping)
-    {
-        int sum = 0;
-
-        for (int x = 0; x < BLOCK_SIZE; x++)
-            for (int y = 0; y < BLOCK_SIZE; y++)
-                sum += mapping[x][y];
-
-        return (double) sum / (BLOCK_SIZE * BLOCK_SIZE);
-    }
-
-    private static double calculateMappingVariance(Integer[][] mapping)
-    {
-        double mean = mean(mapping);
-
-        double squaredDiffSum = 0;
-
-        for (int x = 0; x < BLOCK_SIZE; x++)
-            for (int y = 0; y < BLOCK_SIZE; y++)
-                squaredDiffSum += pow(mapping[x][y] - mean, 2);
-
-        return squaredDiffSum / (BLOCK_SIZE * BLOCK_SIZE);
-    }
 
     public static Set<List<Integer>> generatePermutations(int[] numbers)
     {
@@ -271,7 +208,6 @@ public class ColorMathUtils
                                        .boxed()
                                        .collect(Collectors.toList());
             Collections.shuffle(list);
-
             permutations.add(list);
         }
         return permutations;
@@ -283,5 +219,68 @@ public class ColorMathUtils
             return 1;
         else
             return factorial(number - 1) * number;
+    }
+
+    public static List<Integer> getMappingFrequency(Integer[][] mapping)
+    {
+        Map<Integer, Integer> frequencyMap = IntStream.range(0, 4)
+                                                      .boxed()
+                                                      .collect(Collectors.toMap(i -> i,
+                                                                                i -> 0,
+                                                                                (a, b) -> b));
+
+        for (int y = 0; y < BLOCK_SIZE; y++)
+            for (int x = 0; x < BLOCK_SIZE; x++)
+                frequencyMap.put(mapping[x][y], frequencyMap.get(mapping[x][y]) + 1);
+
+        return frequencyMap.entrySet()
+                           .stream()
+                           .sorted(Comparator.comparingInt((ToIntFunction<Map.Entry<Integer, Integer>>) Map.Entry::getValue)
+                                             .reversed())
+                           .map(Map.Entry::getKey)
+                           .collect(Collectors.toList());
+    }
+
+    public static Integer[][] computeMappingByFrequency(List<BlockConfig> cluster)
+    {
+        Integer[][] meanMapping = new Integer[BLOCK_SIZE][BLOCK_SIZE];
+
+
+        for (int y = 0; y < BLOCK_SIZE; y++)
+            for (int x = 0; x < BLOCK_SIZE; x++)
+            {
+                int[] frequency = new int[4];
+
+                for (BlockConfig blockConfig : cluster)
+                    frequency[blockConfig.getMapping()[x][y]]++;
+
+                int mostFrequent = -1;
+                int maxFrequency = 0;
+
+                for (int i = 0; i < 4; i++)
+                    if (maxFrequency < frequency[i])
+                    {
+                        mostFrequent = i;
+                        maxFrequency = frequency[i];
+                    }
+
+                meanMapping[x][y] = mostFrequent;
+            }
+
+        return meanMapping;
+    }
+
+    public static double computeMappingVariance(Integer[][] mapping)
+    {
+        int[] frequency = new int[4];
+
+
+        for (int y = 0; y < BLOCK_SIZE; y++)
+            for (int x = 0; x < BLOCK_SIZE; x++)
+                frequency[mapping[x][y]]++;
+
+        double mean = Arrays.stream(frequency, 0, 4).sum() / 4.0;
+
+        return IntStream.range(0, 4).mapToDouble(i -> pow(mean - frequency[i], 2)).sum() / 4.0;
     }
 }

@@ -9,12 +9,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SubpaletteAlgorithm extends EvolutionaryAlgorithm
+public class SubpaletteEA extends EvolutionaryAlgorithm
 {
     private final List<PixelColor> palette;
     private final PixelColor[][] image;
 
-    public SubpaletteAlgorithm(PixelColor[][] image, List<PixelColor> palette)
+    public SubpaletteEA(PixelColor[][] image, List<PixelColor> palette)
     {
         this.image = image;
         this.palette = palette;
@@ -34,7 +34,7 @@ public class SubpaletteAlgorithm extends EvolutionaryAlgorithm
         for (int i = 0; i < 4; i++)
         {
             List<PixelColor> subpalette = new ArrayList<>();
-            subpalette.add(0, PixelColor.BLACK());
+            subpalette.add(0, PixelColor.black());
 
             while (subpalette.size() < 4)
             {

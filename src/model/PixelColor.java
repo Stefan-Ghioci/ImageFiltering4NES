@@ -24,7 +24,7 @@ public class PixelColor
         this.blue = rgb & 0xff;
     }
 
-    public static PixelColor BLACK()
+    public static PixelColor black()
     {
         return new PixelColor(0, 0, 0);
     }

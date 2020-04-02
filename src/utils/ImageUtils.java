@@ -3,6 +3,8 @@ package utils;
 import model.BlockConfig;
 import model.PixelColor;
 import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -14,6 +16,12 @@ import static model.Constants.*;
 
 public class ImageUtils
 {
+    static final Logger LOGGER = LoggerFactory.getLogger(ImageUtils.class);
+
+    private ImageUtils()
+    {
+        throw new IllegalStateException("Utility class");
+    }
 
     public static List<PixelColor> loadNESPalette()
     {
@@ -35,7 +43,7 @@ public class ImageUtils
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            LOGGER.error("Failed to load NES palette file. Cause: {}", e.getMessage());
         }
         return palette;
     }
@@ -53,7 +61,8 @@ public class ImageUtils
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            LOGGER.error("Failed to load image. Cause: {}", e.getMessage());
+
         }
         return image;
     }
@@ -96,7 +105,7 @@ public class ImageUtils
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            LOGGER.error("Failed to save new image. Cause: {}", e.getMessage());
         }
         return outputFile;
     }
@@ -131,21 +140,19 @@ public class ImageUtils
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            LOGGER.error("Failed to write subpalette mapping to file. Cause: {}", e.getMessage());
         }
     }
 
-    public static List<BlockConfig> loadGeneratedBlockConfigs(File textFile, PixelColor[][] image)
+    public static List<BlockConfig> loadBlockConfigs(File textFile, PixelColor[][] image)
     {
-        List<BlockConfig> blockConfigList = new ArrayList<>();
+        List<List<PixelColor>> subpaletteList = new ArrayList<>();
+        Integer[][] subpaletteMappingList = new Integer
+                [STD_WIDTH / BLOCK_GROUP_SIZE]
+                [STD_HEIGHT / BLOCK_GROUP_SIZE];
 
         try (BufferedReader reader = new BufferedReader(new FileReader(textFile)))
         {
-            List<List<PixelColor>> subpaletteList = new ArrayList<>();
-            Integer[][] subpaletteMappingList = new Integer
-                    [STD_WIDTH / BLOCK_GROUP_SIZE]
-                    [STD_HEIGHT / BLOCK_GROUP_SIZE];
-
             for (int i = 0; i < 4; i++)
             {
                 List<PixelColor> subpalette = new ArrayList<>();
@@ -166,34 +173,40 @@ public class ImageUtils
                 for (int x = 0; x < STD_WIDTH / BLOCK_GROUP_SIZE; x++)
                     subpaletteMappingList[x][y] = Integer.valueOf(split[x]);
             }
-
-
-            for (int x = 0; x < STD_WIDTH; x += BLOCK_SIZE)
-                for (int y = 0; y < STD_HEIGHT; y += BLOCK_SIZE)
-                {
-                    Integer[][] mapping = new Integer[BLOCK_SIZE][BLOCK_SIZE];
-                    int row = x / BLOCK_SIZE;
-                    int column = y / BLOCK_SIZE;
-
-                    List<PixelColor> subpalette = subpaletteList
-                            .get(subpaletteMappingList
-                                         [row / (BLOCK_GROUP_SIZE / BLOCK_SIZE)]
-                                         [column / (BLOCK_GROUP_SIZE / BLOCK_SIZE)]
-                                );
-
-                    for (int i = 0; i < BLOCK_SIZE; i++)
-                        for (int j = 0; j < BLOCK_SIZE; j++)
-                            mapping[i][j] =
-                                    subpalette.indexOf(image[x + i][y + j]);
-
-                    blockConfigList.add(new BlockConfig(row, column, mapping, subpalette));
-                }
-
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            LOGGER.error("Failed to load block configs from file. Cause: {}", e.getMessage());
         }
+
+        return createBlockConfigs(image, subpaletteList, subpaletteMappingList);
+    }
+
+    private static List<BlockConfig> createBlockConfigs(PixelColor[][] image,
+                                                        List<List<PixelColor>> subpaletteList,
+                                                        Integer[][] subpaletteMappingList)
+    {
+        List<BlockConfig> blockConfigList = new ArrayList<>();
+        for (int x = 0; x < STD_WIDTH; x += BLOCK_SIZE)
+            for (int y = 0; y < STD_HEIGHT; y += BLOCK_SIZE)
+            {
+                Integer[][] mapping = new Integer[BLOCK_SIZE][BLOCK_SIZE];
+                int row = x / BLOCK_SIZE;
+                int column = y / BLOCK_SIZE;
+
+                List<PixelColor> subpalette = subpaletteList.get(
+                        subpaletteMappingList
+                                [row / (BLOCK_GROUP_SIZE / BLOCK_SIZE)]
+                                [column / (BLOCK_GROUP_SIZE / BLOCK_SIZE)]
+                                                                );
+
+                for (int i = 0; i < BLOCK_SIZE; i++)
+                    for (int j = 0; j < BLOCK_SIZE; j++)
+                        mapping[i][j] =
+                                subpalette.indexOf(image[x + i][y + j]);
+
+                blockConfigList.add(new BlockConfig(row, column, mapping, subpalette));
+            }
         return blockConfigList;
     }
 }

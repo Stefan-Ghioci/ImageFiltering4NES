@@ -2,7 +2,6 @@ package processing;
 
 import model.BlockConfig;
 import model.PixelColor;
-import utils.ColorMathUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -13,13 +12,17 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static model.Constants.*;
-import static utils.ColorMathUtils.bestMatch;
-import static utils.ColorMathUtils.getBestSubpalettePerBlock;
+import static utils.ColorMathUtils.*;
 import static utils.ImageUtils.saveFile;
 import static utils.ImageUtils.writeSubpaletteMappingToFile;
 
 public class ImageProcessing
 {
+
+    private ImageProcessing()
+    {
+        throw new IllegalStateException("Utility class");
+    }
 
     public static List<PixelColor> computeBestPalette(PixelColor[][] originalImage, List<PixelColor> palette)
     {
@@ -41,10 +44,10 @@ public class ImageProcessing
                                                 .map(Map.Entry::getKey)
                                                 .collect(Collectors.toList());
 
-        if (!bestPalette.contains(PixelColor.BLACK()))
+        if (!bestPalette.contains(PixelColor.black()))
         {
             bestPalette.remove(bestPalette.size() - 1);
-            bestPalette.add(PixelColor.BLACK());
+            bestPalette.add(PixelColor.black());
         }
         return bestPalette;
     }
@@ -74,7 +77,7 @@ public class ImageProcessing
 
                     image[x][y] = newPixel;
 
-                    ColorMathUtils.dither(image, x, y, oldPixel, newPixel);
+                    dither(image, x, y, oldPixel, newPixel);
                 }
         }
         saveFile(image, filename);
@@ -109,13 +112,13 @@ public class ImageProcessing
     }
 
     public static List<BlockConfig> compress(List<List<BlockConfig>> clusteredBlockConfigList,
-                                             PixelColor[][] image)
+                                             PixelColor[][] image, boolean fine)
     {
         List<BlockConfig> compressedBlockConfigList = new ArrayList<>();
 
         for (List<BlockConfig> cluster : clusteredBlockConfigList)
         {
-            Integer[][] bestFitMapping = ColorMathUtils.bestFitMapping(cluster, image);
+            Integer[][] bestFitMapping = fine ? computeMappingByFrequency(cluster) : bestFitMapping(cluster, image);
 
             for (BlockConfig blockConfig : cluster)
             {
@@ -129,46 +132,6 @@ public class ImageProcessing
         }
 
         return compressedBlockConfigList;
-    }
-
-    public static List<List<BlockConfig>> clusterByDivision(List<BlockConfig> blockConfigList)
-    {
-
-
-        Map<List<Integer>, List<BlockConfig>> clusterMap =
-                ColorMathUtils.generatePermutations(new int[]{0, 1, 2, 3})
-                              .stream()
-                              .collect(Collectors.toMap(permutation -> permutation,
-                                                        permutation -> new ArrayList<>(),
-                                                        (a, b) -> b));
-
-        blockConfigList.forEach(blockConfig -> clusterMap.get(getMappingFrequency(blockConfig.getMapping()))
-                                                         .add(blockConfig));
-
-        return clusterMap.values()
-                         .stream()
-                         .filter(cluster -> !cluster.isEmpty())
-                         .collect(Collectors.toList());
-    }
-
-    private static List<Integer> getMappingFrequency(Integer[][] mapping)
-    {
-        Map<Integer, Integer> frequencyMap = IntStream.range(0, 4)
-                                                      .boxed()
-                                                      .collect(Collectors.toMap(i -> i,
-                                                                                i -> 0,
-                                                                                (a, b) -> b));
-
-        for (int y = 0; y < BLOCK_SIZE; y++)
-            for (int x = 0; x < BLOCK_SIZE; x++)
-                frequencyMap.put(mapping[x][y], frequencyMap.get(mapping[x][y]) + 1);
-
-        return frequencyMap.entrySet()
-                           .stream()
-                           .sorted(Comparator.comparingInt((ToIntFunction<Map.Entry<Integer, Integer>>) Map.Entry::getValue)
-                                             .reversed())
-                           .map(Map.Entry::getKey)
-                           .collect(Collectors.toList());
     }
 
 }

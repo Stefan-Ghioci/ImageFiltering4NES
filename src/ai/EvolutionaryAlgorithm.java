@@ -10,18 +10,18 @@ import java.util.stream.IntStream;
 
 public abstract class EvolutionaryAlgorithm
 {
-    final static Logger LOGGER = LoggerFactory.getLogger(EvolutionaryAlgorithm.class);
+    static final Logger LOGGER = LoggerFactory.getLogger(EvolutionaryAlgorithm.class);
 
     public Individual run(int populationSize, int stagnationFactor, double mutationChance)
     {
-        LOGGER.info("Running evolutionary algorithm with {} individuals and {} stagnation factor",
+        LOGGER.info("Running steady-state evolutionary algorithm with {} individuals and {} stagnation factor",
                     populationSize,
                     stagnationFactor);
 
         List<Individual> population = generatePopulation(populationSize);
 
 
-        Individual lastBest = null;
+        Individual best = population.get(0);
         int iterationCounter = 1;
         int stagnationTime = 0;
 
@@ -30,7 +30,7 @@ public abstract class EvolutionaryAlgorithm
         while (stagnationTime < stagnationFactor)
         {
 
-            lastBest = best(population);
+            best = best(population);
             Individual mother = select(population);
             Individual father = select(population);
 
@@ -54,11 +54,11 @@ public abstract class EvolutionaryAlgorithm
 
             if (iterationCounter != 1)
             {
-                double improvement = calculateImprovement(lastBest, newBest);
+                double improvement = calculateImprovement(best, newBest);
 
                 if (improvement != 0)
                 {
-                    lastBest = newBest;
+                    best = newBest;
                     stagnationTime = 0;
                     LOGGER.info("Iteration {}, best fitness {} with {}% improvement",
                                 iterationCounter,
@@ -68,20 +68,18 @@ public abstract class EvolutionaryAlgorithm
                 else
                 {
                     stagnationTime++;
-//                    LOGGER.info("Iteration {}, stagnation", iterationCounter);
                 }
             }
             else
             {
-                lastBest = newBest;
+                best = newBest;
                 LOGGER.info("Iteration 1, initial best fitness {}", (int) newBest.getFitness());
             }
             iterationCounter++;
         }
 
-        //noinspection ConstantConditions
-        LOGGER.info("Algorithm ran for {} iterations, last best fitness {}", iterationCounter, (int)lastBest.getFitness());
-        return lastBest;
+        LOGGER.info("Algorithm ran for {} iterations, last best fitness {}", iterationCounter, (int) best.getFitness());
+        return best;
     }
 
     private double calculateImprovement(Individual lastBest, Individual newBest)
@@ -95,7 +93,7 @@ public abstract class EvolutionaryAlgorithm
     {
         return population.stream()
                          .max(Comparator.comparingDouble(Individual::getFitness))
-                         .orElse(null);
+                         .orElse(population.get(0));
     }
 
     private List<Individual> generatePopulation(int populationSize)
@@ -110,7 +108,7 @@ public abstract class EvolutionaryAlgorithm
     {
         return population.stream()
                          .min(Comparator.comparingDouble(Individual::getFitness))
-                         .orElse(null);
+                         .orElse(population.get(0));
     }
 
     protected abstract Individual generateIndividual();

@@ -1,5 +1,7 @@
-import ai.impl.SubpaletteAlgorithm;
+package run;
+
 import ai.impl.SubpaletteConfig;
+import ai.impl.SubpaletteEA;
 import model.PixelColor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +47,7 @@ public class Reconstruct
         {
             LOGGER.info("Reconstruction using best palette on nes raw image");
 
-            SubpaletteAlgorithm algorithm = new SubpaletteAlgorithm(nesRawImage, bestPalette);
+            SubpaletteEA algorithm = new SubpaletteEA(nesRawImage, bestPalette);
             SubpaletteConfig bestConfig = algorithm.run(populationSize, stagnationFactor, mutationChance);
             List<List<PixelColor>> subpalettes = bestConfig.getSolution();
 
@@ -55,7 +57,7 @@ public class Reconstruct
         {
             LOGGER.info("Reconstruction using best palette on nes dithered image");
 
-            SubpaletteAlgorithm algorithm = new SubpaletteAlgorithm(nesDitheredImage, bestPalette);
+            SubpaletteEA algorithm = new SubpaletteEA(nesDitheredImage, bestPalette);
             SubpaletteConfig bestConfig = algorithm.run(populationSize, stagnationFactor, mutationChance);
             List<List<PixelColor>> subpalettes = bestConfig.getSolution();
 
@@ -67,7 +69,7 @@ public class Reconstruct
         {
             LOGGER.info("Reconstruction using best palette on best raw image");
 
-            SubpaletteAlgorithm algorithm = new SubpaletteAlgorithm(bestRawImage, bestPalette);
+            SubpaletteEA algorithm = new SubpaletteEA(bestRawImage, bestPalette);
             SubpaletteConfig bestConfig = algorithm.run(populationSize, stagnationFactor, mutationChance);
             List<List<PixelColor>> subpalettes = bestConfig.getSolution();
 
@@ -77,7 +79,7 @@ public class Reconstruct
         {
             LOGGER.info("Reconstruction using best palette on best dithered image");
 
-            SubpaletteAlgorithm algorithm = new SubpaletteAlgorithm(bestDitheredImage, bestPalette);
+            SubpaletteEA algorithm = new SubpaletteEA(bestDitheredImage, bestPalette);
             SubpaletteConfig bestConfig = algorithm.run(populationSize, stagnationFactor, mutationChance);
             List<List<PixelColor>> subpalettes = bestConfig.getSolution();
 
