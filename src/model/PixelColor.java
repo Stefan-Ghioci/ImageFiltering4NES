@@ -79,6 +79,6 @@ public class PixelColor
 
     public int getLuminance()
     {
-        return (int) (0.241 * red + 0.691 * green + 0.068 * blue);
+        return (int) (0.2126 * red + 0.7152 * green + 0.0722 * blue);
     }
 }

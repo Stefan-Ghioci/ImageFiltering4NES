@@ -1,7 +1,7 @@
 package utils;
 
-import model.BlockConfig;
 import model.PixelColor;
+import model.TileConfig;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,19 +67,19 @@ public class ImageUtils
         return image;
     }
 
-    public static PixelColor[][] convertBlockConfigsToPixelArray(List<BlockConfig> blockConfigList)
+    public static PixelColor[][] convertTileConfigsToPixelArray(List<TileConfig> tileConfigList)
     {
         PixelColor[][] image = new PixelColor[STD_WIDTH][STD_HEIGHT];
 
-        for (BlockConfig blockConfig : blockConfigList)
+        for (TileConfig tileConfig : tileConfigList)
         {
-            int x = blockConfig.getRow() * BLOCK_SIZE;
-            int y = blockConfig.getColumn() * BLOCK_SIZE;
-            Integer[][] mapping = blockConfig.getMapping();
-            List<PixelColor> subpalette = blockConfig.getSubpalette();
+            int x = tileConfig.getRow() * TILE_SIZE;
+            int y = tileConfig.getColumn() * TILE_SIZE;
+            Integer[][] mapping = tileConfig.getMapping();
+            List<PixelColor> subpalette = tileConfig.getSubpalette();
 
-            for (int i = 0; i < BLOCK_SIZE; i++)
-                for (int j = 0; j < BLOCK_SIZE; j++)
+            for (int i = 0; i < TILE_SIZE; i++)
+                for (int j = 0; j < TILE_SIZE; j++)
                 {
                     image[x + i][y + j] = subpalette.get(mapping[i][j]);
                 }
@@ -134,7 +134,7 @@ public class ImageUtils
             {
                 Integer subpaletteIndex = subpaletteMapping.get(i);
                 writer.write(subpaletteIndex + " ");
-                if ((i + 1) % (STD_WIDTH / BLOCK_GROUP_SIZE) == 0)
+                if ((i + 1) % (STD_WIDTH / TILE_GROUP_SIZE) == 0)
                     writer.newLine();
             }
         }
@@ -144,12 +144,12 @@ public class ImageUtils
         }
     }
 
-    public static List<BlockConfig> loadBlockConfigs(File textFile, PixelColor[][] image)
+    public static List<TileConfig> loadTileConfigs(File textFile, PixelColor[][] image)
     {
         List<List<PixelColor>> subpaletteList = new ArrayList<>();
         Integer[][] subpaletteMappingList = new Integer
-                [STD_WIDTH / BLOCK_GROUP_SIZE]
-                [STD_HEIGHT / BLOCK_GROUP_SIZE];
+                [STD_WIDTH / TILE_GROUP_SIZE]
+                [STD_HEIGHT / TILE_GROUP_SIZE];
 
         try (BufferedReader reader = new BufferedReader(new FileReader(textFile)))
         {
@@ -167,46 +167,46 @@ public class ImageUtils
                 subpaletteList.add(subpalette);
             }
 
-            for (int y = 0; y < STD_HEIGHT / BLOCK_GROUP_SIZE; y++)
+            for (int y = 0; y < STD_HEIGHT / TILE_GROUP_SIZE; y++)
             {
                 String[] split = reader.readLine().split(" ");
-                for (int x = 0; x < STD_WIDTH / BLOCK_GROUP_SIZE; x++)
+                for (int x = 0; x < STD_WIDTH / TILE_GROUP_SIZE; x++)
                     subpaletteMappingList[x][y] = Integer.valueOf(split[x]);
             }
         }
         catch (IOException e)
         {
-            LOGGER.error("Failed to load block configs from file. Cause: {}", e.getMessage());
+            LOGGER.error("Failed to load tile configs from file. Cause: {}", e.getMessage());
         }
 
-        return createBlockConfigs(image, subpaletteList, subpaletteMappingList);
+        return createTileConfigs(image, subpaletteList, subpaletteMappingList);
     }
 
-    private static List<BlockConfig> createBlockConfigs(PixelColor[][] image,
-                                                        List<List<PixelColor>> subpaletteList,
-                                                        Integer[][] subpaletteMappingList)
+    private static List<TileConfig> createTileConfigs(PixelColor[][] image,
+                                                      List<List<PixelColor>> subpaletteList,
+                                                      Integer[][] subpaletteMappingList)
     {
-        List<BlockConfig> blockConfigList = new ArrayList<>();
-        for (int x = 0; x < STD_WIDTH; x += BLOCK_SIZE)
-            for (int y = 0; y < STD_HEIGHT; y += BLOCK_SIZE)
+        List<TileConfig> tileConfigList = new ArrayList<>();
+        for (int x = 0; x < STD_WIDTH; x += TILE_SIZE)
+            for (int y = 0; y < STD_HEIGHT; y += TILE_SIZE)
             {
-                Integer[][] mapping = new Integer[BLOCK_SIZE][BLOCK_SIZE];
-                int row = x / BLOCK_SIZE;
-                int column = y / BLOCK_SIZE;
+                Integer[][] mapping = new Integer[TILE_SIZE][TILE_SIZE];
+                int row = x / TILE_SIZE;
+                int column = y / TILE_SIZE;
 
                 List<PixelColor> subpalette = subpaletteList.get(
                         subpaletteMappingList
-                                [row / (BLOCK_GROUP_SIZE / BLOCK_SIZE)]
-                                [column / (BLOCK_GROUP_SIZE / BLOCK_SIZE)]
+                                [row / (TILE_GROUP_SIZE / TILE_SIZE)]
+                                [column / (TILE_GROUP_SIZE / TILE_SIZE)]
                                                                 );
 
-                for (int i = 0; i < BLOCK_SIZE; i++)
-                    for (int j = 0; j < BLOCK_SIZE; j++)
+                for (int i = 0; i < TILE_SIZE; i++)
+                    for (int j = 0; j < TILE_SIZE; j++)
                         mapping[i][j] =
                                 subpalette.indexOf(image[x + i][y + j]);
 
-                blockConfigList.add(new BlockConfig(row, column, mapping, subpalette));
+                tileConfigList.add(new TileConfig(row, column, mapping, subpalette));
             }
-        return blockConfigList;
+        return tileConfigList;
     }
 }

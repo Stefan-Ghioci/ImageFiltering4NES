@@ -1,13 +1,11 @@
 package utils;
 
-import model.BlockConfig;
 import model.PixelColor;
+import model.TileConfig;
 
-import java.util.*;
-import java.util.function.ToIntFunction;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.List;
 
+import static java.lang.Math.log10;
 import static java.lang.Math.pow;
 import static model.Constants.*;
 
@@ -20,34 +18,35 @@ public class ColorMathUtils
 
     public static PixelColor bestMatch(PixelColor color, List<PixelColor> palette)
     {
-        PixelColor minDiffColor = palette.get(0);
-        double minDiff = computeColorDiffSquared(color, palette.get(0));
+        PixelColor minDistanceColor = palette.get(0);
+        double minDistance = distanceBetween(color, palette.get(0));
 
         for (PixelColor paletteColor : palette)
         {
-            double diff = computeColorDiffSquared(color, paletteColor);
-            if (diff < minDiff)
+            double distance = distanceBetween(color, paletteColor);
+            if (distance < minDistance)
             {
-                minDiff = diff;
-                minDiffColor = paletteColor;
+                minDistance = distance;
+                minDistanceColor = paletteColor;
             }
         }
-        return minDiffColor;
+        return minDistanceColor;
     }
 
-    public static int computeColorDiffSquared(PixelColor color1, PixelColor color2)
+    public static double distanceBetween(PixelColor color1, PixelColor color2)
     {
-        int r1 = color1.getRed();
-        int g1 = color1.getGreen();
-        int b1 = color1.getBlue();
+        double r1 = color1.getRed();
+        double g1 = color1.getGreen();
+        double b1 = color1.getBlue();
 
-        int r2 = color2.getRed();
-        int g2 = color2.getGreen();
-        int b2 = color2.getBlue();
+        double r2 = color2.getRed();
+        double g2 = color2.getGreen();
+        double b2 = color2.getBlue();
 
-        return ((r1 - r2) * 3) * ((r1 - r2) * 3) +
-               ((g1 - g2) * 4) * ((g1 - g2) * 4) +
-               ((b1 - b2) * 2) * ((b1 - b2) * 2);
+        return (((r1 - r2) * 3) * ((r1 - r2) * 3) +
+                ((g1 - g2) * 4) * ((g1 - g2) * 4) +
+                ((b1 - b2) * 2) * ((b1 - b2) * 2)) /
+               (3 * 3 + 4 * 4 + 2 * 2);
     }
 
     public static void dither(PixelColor[][] image, int x, int y, PixelColor oldPixel, PixelColor newPixel)
@@ -78,82 +77,86 @@ public class ColorMathUtils
 
     }
 
-    public static double getMinDiffSumPerBlock(int x,
-                                               int y,
-                                               List<List<PixelColor>> subpaletteList,
-                                               PixelColor[][] image)
+    public static double getMinDistanceSumPerTileGroup(int x,
+                                                       int y,
+                                                       List<List<PixelColor>> subpaletteList,
+                                                       PixelColor[][] image)
     {
-        double minDiffSum = -1;
+        double minDistanceSum = -1;
 
         for (List<PixelColor> subpalette : subpaletteList)
         {
-            double diffSum = 0;
+            double distanceSum = 0;
 
-            for (int i = 0; i < BLOCK_GROUP_SIZE; i++)
-                for (int j = 0; j < BLOCK_GROUP_SIZE; j++)
+            for (int i = 0; i < TILE_GROUP_SIZE; i++)
+                for (int j = 0; j < TILE_GROUP_SIZE; j++)
                 {
                     PixelColor color = image[x + i][y + j];
                     PixelColor bestMatch = bestMatch(color, subpalette);
-                    diffSum += computeColorDiffSquared(color, bestMatch);
+                    distanceSum += distanceBetween(color, bestMatch);
                 }
-            if (minDiffSum == -1 || minDiffSum > diffSum)
-                minDiffSum = diffSum;
+            if (minDistanceSum == -1 || minDistanceSum > distanceSum)
+                minDistanceSum = distanceSum;
         }
-        return minDiffSum;
+        return minDistanceSum;
     }
 
-    public static List<PixelColor> getBestSubpalettePerBlock(int x,
-                                                             int y,
-                                                             List<List<PixelColor>> subpaletteList,
-                                                             PixelColor[][] image)
+    public static List<PixelColor> getMinDistanceSubpalettePerTileGroup(int x,
+                                                                        int y,
+                                                                        List<List<PixelColor>> subpaletteList,
+                                                                        PixelColor[][] image)
     {
-        double minDiffSum = -1;
-        List<PixelColor> minSubpalette = subpaletteList.get(0);
+        double minDistanceSum = -1;
+        List<PixelColor> bestSubpalette = subpaletteList.get(0);
 
         for (List<PixelColor> subpalette : subpaletteList)
         {
-            double diffSum = 0;
+            double distanceSum = 0;
 
-            for (int i = 0; i < BLOCK_GROUP_SIZE; i++)
-                for (int j = 0; j < BLOCK_GROUP_SIZE; j++)
+            for (int i = 0; i < TILE_GROUP_SIZE; i++)
+                for (int j = 0; j < TILE_GROUP_SIZE; j++)
                 {
                     PixelColor color = image[x + i][y + j];
                     PixelColor bestMatch = bestMatch(color, subpalette);
-                    diffSum += computeColorDiffSquared(color, bestMatch);
+                    distanceSum += distanceBetween(color, bestMatch);
                 }
-            if (minDiffSum == -1 || minDiffSum > diffSum)
+            if (minDistanceSum == -1 || minDistanceSum > distanceSum)
             {
-                minDiffSum = diffSum;
-                minSubpalette = subpalette;
+                minDistanceSum = distanceSum;
+                bestSubpalette = subpalette;
             }
         }
-        return minSubpalette;
+        return bestSubpalette;
     }
 
-    public static double calculateAvgDiff(PixelColor[][] image1, PixelColor[][] image2)
+    public static double computeAverageDistance(PixelColor[][] image1, PixelColor[][] image2)
     {
         int pixelCount = STD_WIDTH * STD_HEIGHT;
-        double diffSum = 0;
+        double distanceSum = 0;
 
         for (int x = 0; x < STD_WIDTH; x++)
             for (int y = 0; y < STD_HEIGHT; y++)
-                diffSum += computeColorDiffSquared(image1[x][y], image2[x][y]);
+                distanceSum += distanceBetween(image1[x][y], image2[x][y]);
 
-        return diffSum / pixelCount;
+        return distanceSum / pixelCount;
     }
 
-    public static Integer[][] bestFitMapping(List<BlockConfig> cluster, PixelColor[][] image)
+    private static double getSquaredError(PixelColor color1, PixelColor color2)
     {
+        return pow(color1.getLuminance() - color2.getLuminance(), 2);
+    }
 
 
+    public static Integer[][] getBestFitMapping(List<TileConfig> cluster, PixelColor[][] image)
+    {
         Integer[][] bestFitMapping = null;
-        double minAvgDiffSum = -1;
+        double minMSE = -1;
 
-        for (BlockConfig config1 : cluster)
+        for (TileConfig config1 : cluster)
         {
-            double avgDiffSum = 0;
+            double mse = 0;
 
-            for (BlockConfig config2 : cluster)
+            for (TileConfig config2 : cluster)
             {
                 Integer row = config2.getRow();
                 Integer column = config2.getColumn();
@@ -161,98 +164,53 @@ public class ColorMathUtils
 
                 Integer[][] mapping = config1.getMapping();
 
-                BlockConfig temp = new BlockConfig(row, column, mapping, subpalette);
+                TileConfig temp = new TileConfig(row, column, mapping, subpalette);
 
-                avgDiffSum += calculateBlockDiffSum(temp, image);
+                mse += getSquaredErrorSumPerTile(temp, image);
             }
-            avgDiffSum /= cluster.size();
+            mse /= cluster.size();
 
-            if (minAvgDiffSum == -1 || minAvgDiffSum > avgDiffSum)
+            if (minMSE == -1 || minMSE > mse)
             {
                 bestFitMapping = config1.getMapping();
-                minAvgDiffSum = avgDiffSum;
+                minMSE = mse;
             }
         }
 
         return bestFitMapping;
     }
 
-    private static double calculateBlockDiffSum(BlockConfig blockConfig, PixelColor[][] image)
+    private static double getSquaredErrorSumPerTile(TileConfig tileConfig, PixelColor[][] image)
     {
-        double diffSum = 0;
-        Integer[][] mapping = blockConfig.getMapping();
-        List<PixelColor> subpalette = blockConfig.getSubpalette();
+        double squaredErrorSum = 0;
+        Integer[][] mapping = tileConfig.getMapping();
+        List<PixelColor> subpalette = tileConfig.getSubpalette();
 
-        int x = blockConfig.getRow() * BLOCK_SIZE;
-        int y = blockConfig.getColumn() * BLOCK_SIZE;
+        int x = tileConfig.getRow() * TILE_SIZE;
+        int y = tileConfig.getColumn() * TILE_SIZE;
 
-        for (int i = 0; i < BLOCK_SIZE; i++)
-            for (int j = 0; j < BLOCK_SIZE; j++)
+        for (int i = 0; i < TILE_SIZE; i++)
+            for (int j = 0; j < TILE_SIZE; j++)
             {
-                diffSum += computeColorDiffSquared(image[x + i][y + j], subpalette.get(mapping[i][j]));
+                squaredErrorSum += getSquaredError(image[x + i][y + j], subpalette.get(mapping[i][j]));
             }
 
-        return diffSum;
+        return squaredErrorSum;
     }
 
 
-    public static Set<List<Integer>> generatePermutations(int[] numbers)
+    public static Integer[][] computeAverageMappingByFrequency(List<TileConfig> cluster)
     {
-        Set<List<Integer>> permutations = new HashSet<>();
-
-        int maxSize = factorial(numbers.length);
-
-        while (permutations.size() < maxSize)
-        {
-            List<Integer> list = Arrays.stream(numbers)
-                                       .boxed()
-                                       .collect(Collectors.toList());
-            Collections.shuffle(list);
-            permutations.add(list);
-        }
-        return permutations;
-    }
-
-    private static int factorial(int number)
-    {
-        if (number == 1 || number == 0)
-            return 1;
-        else
-            return factorial(number - 1) * number;
-    }
-
-    public static List<Integer> getMappingFrequency(Integer[][] mapping)
-    {
-        Map<Integer, Integer> frequencyMap = IntStream.range(0, 4)
-                                                      .boxed()
-                                                      .collect(Collectors.toMap(i -> i,
-                                                                                i -> 0,
-                                                                                (a, b) -> b));
-
-        for (int y = 0; y < BLOCK_SIZE; y++)
-            for (int x = 0; x < BLOCK_SIZE; x++)
-                frequencyMap.put(mapping[x][y], frequencyMap.get(mapping[x][y]) + 1);
-
-        return frequencyMap.entrySet()
-                           .stream()
-                           .sorted(Comparator.comparingInt((ToIntFunction<Map.Entry<Integer, Integer>>) Map.Entry::getValue)
-                                             .reversed())
-                           .map(Map.Entry::getKey)
-                           .collect(Collectors.toList());
-    }
-
-    public static Integer[][] computeMappingByFrequency(List<BlockConfig> cluster)
-    {
-        Integer[][] meanMapping = new Integer[BLOCK_SIZE][BLOCK_SIZE];
+        Integer[][] meanMapping = new Integer[TILE_SIZE][TILE_SIZE];
 
 
-        for (int y = 0; y < BLOCK_SIZE; y++)
-            for (int x = 0; x < BLOCK_SIZE; x++)
+        for (int y = 0; y < TILE_SIZE; y++)
+            for (int x = 0; x < TILE_SIZE; x++)
             {
                 int[] frequency = new int[4];
 
-                for (BlockConfig blockConfig : cluster)
-                    frequency[blockConfig.getMapping()[x][y]]++;
+                for (TileConfig tileConfig : cluster)
+                    frequency[tileConfig.getMapping()[x][y]]++;
 
                 int mostFrequent = -1;
                 int maxFrequency = 0;
@@ -270,17 +228,20 @@ public class ColorMathUtils
         return meanMapping;
     }
 
-    public static double computeMappingVariance(Integer[][] mapping)
+    public static double computeMeanSquaredError(PixelColor[][] image1, PixelColor[][] image2)
     {
-        int[] frequency = new int[4];
+        int pixelCount = STD_WIDTH * STD_HEIGHT;
+        double squaredErrorSum = 0;
 
+        for (int x = 0; x < STD_WIDTH; x++)
+            for (int y = 0; y < STD_HEIGHT; y++)
+                squaredErrorSum += getSquaredError(image1[x][y], image2[x][y]);
 
-        for (int y = 0; y < BLOCK_SIZE; y++)
-            for (int x = 0; x < BLOCK_SIZE; x++)
-                frequency[mapping[x][y]]++;
+        return squaredErrorSum / pixelCount;
+    }
 
-        double mean = Arrays.stream(frequency, 0, 4).sum() / 4.0;
-
-        return IntStream.range(0, 4).mapToDouble(i -> pow(mean - frequency[i], 2)).sum() / 4.0;
+    public static double getPeakSignal2NoiseRatio(double mse)
+    {
+        return 10 * log10(255 * 255 / mse);
     }
 }

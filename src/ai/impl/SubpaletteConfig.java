@@ -32,17 +32,15 @@ public class SubpaletteConfig implements Individual
     @Override
     public void evaluate()
     {
-        for (int x = 0; x < STD_WIDTH; x += BLOCK_GROUP_SIZE)
-            for (int y = 0; y < STD_HEIGHT; y += BLOCK_GROUP_SIZE)
+        for (int x = 0; x < STD_WIDTH; x += TILE_GROUP_SIZE)
+            for (int y = 0; y < STD_HEIGHT; y += TILE_GROUP_SIZE)
             {
-                double minDiffSum = ColorMathUtils.getMinDiffSumPerBlock(x, y, subpaletteList, image);
+                double minDiffSum = ColorMathUtils.getMinDistanceSumPerTileGroup(x, y, subpaletteList, image);
 
-                fitness += (minDiffSum / (BLOCK_GROUP_SIZE * BLOCK_GROUP_SIZE));
+                fitness += minDiffSum;
             }
-        int blockGroups = (STD_HEIGHT * STD_WIDTH) /
-                          (BLOCK_GROUP_SIZE * BLOCK_GROUP_SIZE);
 
-        fitness = fitness / blockGroups;
+        fitness = fitness / (STD_WIDTH * STD_HEIGHT);
     }
 
 

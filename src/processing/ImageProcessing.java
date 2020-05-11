@@ -1,7 +1,7 @@
 package processing;
 
-import model.BlockConfig;
 import model.PixelColor;
+import model.TileConfig;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -93,15 +93,15 @@ public class ImageProcessing
 
         subpaletteList.forEach(subpalette -> subpalette.sort(Comparator.comparingInt(PixelColor::getLuminance)));
 
-        for (int y = 0; y < STD_HEIGHT; y += BLOCK_GROUP_SIZE)
-            for (int x = 0; x < STD_WIDTH; x += BLOCK_GROUP_SIZE)
+        for (int y = 0; y < STD_HEIGHT; y += TILE_GROUP_SIZE)
+            for (int x = 0; x < STD_WIDTH; x += TILE_GROUP_SIZE)
             {
-                List<PixelColor> subpalette = getBestSubpalettePerBlock(x, y, subpaletteList, originalImage);
+                List<PixelColor> subpalette = getMinDistanceSubpalettePerTileGroup(x, y, subpaletteList, originalImage);
 
                 subpaletteMapping.add(subpaletteList.indexOf(subpalette));
 
-                for (int i = 0; i < BLOCK_GROUP_SIZE; i++)
-                    for (int j = 0; j < BLOCK_GROUP_SIZE; j++)
+                for (int i = 0; i < TILE_GROUP_SIZE; i++)
+                    for (int j = 0; j < TILE_GROUP_SIZE; j++)
                     {
                         PixelColor bestMatch = bestMatch(originalImage[x + i][y + j], subpalette);
                         image[x + i][y + j] = bestMatch;
@@ -111,27 +111,29 @@ public class ImageProcessing
         writeSubpaletteMappingToFile(subpaletteList, subpaletteMapping, saveFile(image, filename));
     }
 
-    public static List<BlockConfig> compress(List<List<BlockConfig>> clusteredBlockConfigList,
-                                             PixelColor[][] image, boolean fine)
+    public static List<TileConfig> compress(List<List<TileConfig>> clusteredTileConfigList,
+                                            PixelColor[][] image, boolean fine)
     {
-        List<BlockConfig> compressedBlockConfigList = new ArrayList<>();
+        List<TileConfig> compressedTileConfigList = new ArrayList<>();
 
-        for (List<BlockConfig> cluster : clusteredBlockConfigList)
+        for (List<TileConfig> cluster : clusteredTileConfigList)
         {
-            Integer[][] bestFitMapping = fine ? computeMappingByFrequency(cluster) : bestFitMapping(cluster, image);
+            Integer[][]
+                    bestFitMapping =
+                    fine ? computeAverageMappingByFrequency(cluster) : getBestFitMapping(cluster, image);
 
-            for (BlockConfig blockConfig : cluster)
+            for (TileConfig tileConfig : cluster)
             {
-                List<PixelColor> subpalette = blockConfig.getSubpalette();
-                Integer row = blockConfig.getRow();
-                Integer column = blockConfig.getColumn();
+                List<PixelColor> subpalette = tileConfig.getSubpalette();
+                Integer row = tileConfig.getRow();
+                Integer column = tileConfig.getColumn();
 
 
-                compressedBlockConfigList.add(new BlockConfig(row, column, bestFitMapping, subpalette));
+                compressedTileConfigList.add(new TileConfig(row, column, bestFitMapping, subpalette));
             }
         }
 
-        return compressedBlockConfigList;
+        return compressedTileConfigList;
     }
 
 }

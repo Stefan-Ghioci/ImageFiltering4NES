@@ -2,14 +2,14 @@ package model;
 
 import java.util.List;
 
-public class BlockConfig
+public class TileConfig
 {
     private final Integer row;
     private final Integer column;
     private final Integer[][] mapping;
     private final List<PixelColor> subpalette;
 
-    public BlockConfig(Integer row, Integer column, Integer[][] mapping, List<PixelColor> subpalette)
+    public TileConfig(Integer row, Integer column, Integer[][] mapping, List<PixelColor> subpalette)
     {
         this.row = row;
         this.column = column;

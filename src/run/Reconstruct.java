@@ -30,20 +30,36 @@ public class Reconstruct
                                                             nesPalette,
                                                             "generated/" + filename + "_nes_raw.bmp",
                                                             false);
+        LOGGER.info("Redrawn image with nes palette and no dithering");
+
         PixelColor[][] nesDitheredImage = ImageProcessing.redraw(originalImage,
                                                                  nesPalette,
                                                                  "generated/" + filename + "_nes_dithered.bmp",
                                                                  true);
+        LOGGER.info("Redrawn image with nes palette and dithering");
 
         PixelColor[][] bestRawImage = ImageProcessing.redraw(originalImage,
                                                              bestPalette,
                                                              "generated/" + filename + "_best_raw.bmp",
                                                              false);
+        LOGGER.info("Redrawn image with best palette and no dithering");
+
         PixelColor[][] bestDitheredImage = ImageProcessing.redraw(originalImage,
                                                                   bestPalette,
                                                                   "generated/" + filename + "_best_dithered.bmp",
                                                                   true);
+        LOGGER.info("Redrawn image with best palette and dithering");
 
+        {
+            LOGGER.info("Reconstruction using best palette on original image");
+
+            SubpaletteEA algorithm = new SubpaletteEA(originalImage, bestPalette);
+            SubpaletteConfig bestConfig = algorithm.run(populationSize, stagnationFactor, mutationChance);
+            List<List<PixelColor>> subpalettes = bestConfig.getSolution();
+
+            String resultFilename = "generated/" + filename + "_ai_original_" + (int) bestConfig.getFitness() + ".bmp";
+            ImageProcessing.reconstruct(originalImage, subpalettes, resultFilename);
+        }
         {
             LOGGER.info("Reconstruction using best palette on nes raw image");
 
